@@ -39,7 +39,7 @@ class ArticleBody extends StatelessWidget {
               ), /*
               GestureDetector(
                 onTap: () {
-                  print('saving');
+                  debugPrint('saving');
                 },
                 child: Icon(
                   Icons.bookmark_add,

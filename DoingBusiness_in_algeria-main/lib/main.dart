@@ -22,7 +22,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     message.notification!.title ?? "Notification",
     message.notification!.body ?? "You have a new message",
   );
-  print("Handling a background message: ${message.messageId}");
+  debugPrint("Handling a background message: ${message.messageId}");
 }
 
 void main() async {
@@ -55,14 +55,12 @@ class MyApp extends StatelessWidget {
       DeviceOrientation.portraitDown,
     ]);
 
-    print(profileController.isDarkMode.value);
-
     return Obx(
       () => GetMaterialApp(
           debugShowCheckedModeBanner: false,
           initialBinding: GeneralBindings(),
-          theme: lightTheme,
-          darkTheme: darkTheme,
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
           themeMode: profileController.isDarkMode.value
               ? ThemeMode.dark
               : ThemeMode.light,

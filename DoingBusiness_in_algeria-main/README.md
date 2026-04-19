@@ -1,16 +1,38 @@
-# doingbusiness
+# DoingBusiness in Algeria
 
-A new Flutter project.
+Mobile application for Grant Thornton Algeria's business insights on the
+Algerian market.
 
-## Getting Started
+## Stack
 
-This project is a starting point for a Flutter application.
+- Flutter 3.24+
+- Firebase (Auth, Firestore, FCM, Functions, App Check)
+- GetX for state management & navigation
+- Material 3 design system (Grant Thornton palette)
 
-A few resources to get you started if this is your first Flutter project:
+## Development
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Setup
+```bash
+flutter pub get
+cd ios && pod install && cd ..
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Run
+```bash
+flutter run
+```
+
+### Build release
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+### Lint & test
+```bash
+dart format --output=none --set-exit-if-changed .
+flutter analyze --fatal-infos --fatal-warnings
+flutter test
+```
+
+## Documentation
+- [CHANGELOG](CHANGELOG.md)
+- [CONTRIBUTING](CONTRIBUTING.md)

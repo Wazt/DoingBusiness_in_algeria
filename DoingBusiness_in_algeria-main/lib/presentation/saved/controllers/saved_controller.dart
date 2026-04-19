@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:doingbusiness/presentation/Article/controllers/article_controller.dart';
 import 'package:doingbusiness/presentation/Article/models/article_model.dart';
 import 'package:get/get.dart';
@@ -33,7 +34,7 @@ class SavedController extends GetxController {
       savedArticles.remove(id);
       _storage.write('saved_Articles1', savedArticles);
     }
-    print(savedArticles);
+    debugPrint(savedArticles);
   }
 
   Future<void> saveArticle(String id) async {
@@ -42,7 +43,7 @@ class SavedController extends GetxController {
 
       _storage.write('saved_Articles1', savedArticles);
     }
-    print(savedArticles);
+    debugPrint(savedArticles);
   }
 
   initSavedArticles() {

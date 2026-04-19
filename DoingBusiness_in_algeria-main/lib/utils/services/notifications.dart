@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:doingbusiness/utils/services/notification_repository.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -19,9 +20,9 @@ class NotificationController {
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      print('User granted permission');
+      debugPrint('User granted permission');
     } else {
-      print('User declined or has not accepted permission');
+      debugPrint('User declined or has not accepted permission');
     }
 
     // Get the device token
@@ -30,11 +31,11 @@ class NotificationController {
     // Handle foreground notifications
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       if (message.notification != null) {
-        print('Foreground Notification: ${message.notification!.title}');
-        print('Body: ${message.notification!.body}');
+        debugPrint('Foreground Notification: ${message.notification!.title}');
+        debugPrint('Body: ${message.notification!.body}');
       }
       if (message.data.isNotEmpty) {
-        print('Data: ${message.data}');
+        debugPrint('Data: ${message.data}');
       }
 
       Get.snackbar(
@@ -45,7 +46,7 @@ class NotificationController {
 
     // Handle background/terminated state
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('Notification clicked!');
+      debugPrint('Notification clicked!');
       Get.snackbar(
         message.notification!.title ?? "Notification",
         message.notification!.body ?? "You have a new message",
@@ -56,7 +57,7 @@ class NotificationController {
 
   void _getToken() async {
     String? token = await _messaging.getToken();
-    print("FCM Token: $token");
+    debugPrint("FCM Token: $token");
     // Send token to server or save it securely
   }
 }

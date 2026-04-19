@@ -15,16 +15,14 @@ class ProfileController extends GetxController {
   @override
   void onInit() async {
     super.onInit();
-    print('init dark moding');
     SharedPreferences _storage = await SharedPreferences.getInstance();
     isDarkMode.value = _storage.getBool('isDarkMode') ?? false;
-    print('in the init function ${isDarkMode.value}');
   }
 
   Future<void> darkModeSwitch(bool value) async {
     SharedPreferences _storage = await SharedPreferences.getInstance();
     isDarkMode.value = value;
-    Get.changeTheme(isDarkMode.value ? darkTheme : lightTheme);
+    Get.changeTheme(isDarkMode.value ? AppTheme.dark() : AppTheme.light());
     await _storage.setBool("isDarkMode", isDarkMode.value);
   }
 

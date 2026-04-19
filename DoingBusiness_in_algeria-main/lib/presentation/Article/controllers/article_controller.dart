@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:ffi';
 
 import 'package:doingbusiness/data/repository/article_repository.dart';
@@ -44,7 +45,7 @@ class ArticleController extends GetxController {
     await _storage.write('fontsize', fontsizeVal);
 
     Loaders.successSnackBar(title: "Success", message: 'Font size Updated');
-    print(_storage.read('fontsize'));
+    debugPrint(_storage.read('fontsize'));
   }
 
   resetList() {
@@ -59,19 +60,19 @@ class ArticleController extends GetxController {
           (p0) => p0.categoryId == index,
         )
         .toList();
-    print(selectedCat);
+    debugPrint(selectedCat);
   }
 
   Future<void> fetchFeaturedArticles() async {
     try {
       //start the loading
-      print("fetching");
+      debugPrint("fetching");
       isLoading.value = true;
 
       //fetch articles
 
       final articles = await articleRepo.getFeaturedArticles();
-      print('update the fetching');
+      debugPrint('update the fetching');
       //assign the articles
 
       featuredArticles.assignAll(articles);

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:doingbusiness/presentation/MainWrapper/main_wrapper.dart';
 import 'package:doingbusiness/presentation/auth/pages/email_verification.dart';
 import 'package:doingbusiness/presentation/auth/pages/login_screen.dart';
@@ -104,7 +105,7 @@ class AuthenticationRepository extends GetxController {
       await FirebaseAuth.instance.currentUser?.reauthenticateWithCredential;
       return logout();
     } catch (e) {
-      print(e.toString());
+      debugPrint(e.toString());
     }
   }
 }

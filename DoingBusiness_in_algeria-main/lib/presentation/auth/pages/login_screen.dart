@@ -1,505 +1,189 @@
-import 'dart:ui';
 import 'package:doingbusiness/core/configs/theme/app_colors.dart';
-import 'package:doingbusiness/presentation/Profile/pages/email_sent.dart';
+import 'package:doingbusiness/core/configs/theme/app_spacing.dart';
 import 'package:doingbusiness/presentation/Profile/pages/forgot_password_screen.dart';
 import 'package:doingbusiness/presentation/auth/controllers/signin_controller.dart';
 import 'package:doingbusiness/presentation/auth/pages/signup_screen.dart';
 import 'package:doingbusiness/utils/validators.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+/// ════════════════════════════════════════════════════════════════════════
+///  LoginScreen — REDESIGNED
+/// ════════════════════════════════════════════════════════════════════════
+///  Changes from old screen:
+///    UX:
+///      ✔ Removed the heavy 3d_bg.jpg background (memory hog, "template" smell)
+///      ✔ Removed BackdropFilter glass blur (GPU-heavy, outdated aesthetic)
+///      ✔ Clean typography hierarchy with Inter
+///      ✔ Brand identity front and center (GT purple + coral accent)
+///      ✔ autofillHints for password manager support
+///      ✔ Textfields use the theme — automatic dark-mode support
+///      ✔ "Forgot password?" is a prominent link, not buried
+///      ✔ Proper text keyboard + email keyboard types
+///    Bugs:
+///      ✔ Validators RETURN their result (was (v) { validator(v); } — no return)
+///      ✔ onEditingComplete flows focus between fields
+///      ✔ Submit is disabled while loading (prevents double-submit)
+/// ════════════════════════════════════════════════════════════════════════
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    SignInController controller = Get.put(SignInController());
+    final controller = Get.put(SignInController());
+    final theme = Theme.of(context);
 
-    final size = MediaQuery.of(context).size;
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Stack(
-              children: [
-                Container(
-                  height: size.height,
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      fit: BoxFit.cover,
-                      image: AssetImage(
-                        "assets/images/3d_bg.jpg",
-                      ),
-                    ),
-                  ),
-                ),
-                Container(
-                  height: size.height,
-                  color: Colors.black.withOpacity(0.5),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: size.height * 0.08,
-                    horizontal: size.width * 0.08,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: AutofillGroup(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+            child: Form(
+              key: controller.siginKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: AppSpacing.massive),
+
+                  // ─── Brand mark ──────────────────────────────
+                  Row(
                     children: [
-                      Align(
-                        alignment: Alignment.topLeft,
-                        child: Row(
-                          children: [
-                            Image(
-                              image:
-                                  const AssetImage('assets/images/logo_gt.png'),
-                              height: size.width * 0.1,
-                            ),
-                            SizedBox(
-                              width: size.width * 0.01,
-                            ),
-                            const Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Welcome to",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w400,
-                                    color: Colors.white,
-                                    height: 1.02,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                Text(
-                                  "Doing Business",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.white,
-                                    height: 1.02,
-                                    fontSize: 20,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                      Image.asset(
+                        'assets/images/logo_gt.png',
+                        height: 40,
+                        semanticLabel: 'Grant Thornton',
                       ),
-                      SizedBox(
-                        height: size.height * 0.18,
-                      ),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: BackdropFilter(
-                          filter:
-                              new ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                          child: Container(
-                            width: size.width * 0.95,
-                            height: 500,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.4),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "Hey",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w200,
-                                    color: Colors.white,
-                                    height: 1.02,
-                                    fontSize: 25,
-                                  ),
-                                ),
-                                const Text(
-                                  "Connectez vous !!",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w300,
-                                    color: Colors.white,
-                                    height: 1.02,
-                                    fontSize: 35,
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: size.height * 0.05,
-                                ),
-                                Form(
-                                  key: controller.siginKey,
-                                  child: Column(
-                                    children: [
-                                      TextFormField(
-                                          controller: controller.email,
-                                          validator: (value) {
-                                            FieldsValidators.validatingEmail(
-                                                value);
-                                          },
-                                          style: const TextStyle(
-                                              color: Colors.white),
-                                          decoration: const InputDecoration(
-                                            fillColor: Colors.white,
-                                            hintText: "E-mail",
-                                            hintStyle: TextStyle(
-                                                color: Color.fromARGB(
-                                                    255, 129, 129, 129)),
-                                            icon: Icon(
-                                              Icons.email,
-                                              color: Colors.white,
-                                            ),
-                                          )),
-                                      SizedBox(
-                                        height: size.height * 0.03,
-                                      ),
-                                      Obx(
-                                        () => TextFormField(
-                                          style: const TextStyle(
-                                              color: Colors.white),
-                                          controller: controller.password,
-                                          validator: (value) {
-                                            FieldsValidators.validatingField(
-                                                "Password", value);
-                                          },
-                                          obscureText:
-                                              controller.hidePassword.value,
-                                          decoration: InputDecoration(
-                                              hintText: "password",
-                                              hintStyle: TextStyle(
-                                                  color: Color.fromARGB(
-                                                      255, 129, 129, 129)),
-                                              fillColor: Colors.white,
-                                              icon: Icon(
-                                                Icons.lock,
-                                                color: Colors.white,
-                                              ),
-                                              suffixIcon: IconButton(
-                                                onPressed: () => controller
-                                                        .hidePassword.value =
-                                                    !controller
-                                                        .hidePassword.value,
-                                                icon: controller
-                                                        .hidePassword.value
-                                                    ? Icon(Icons.remove_red_eye)
-                                                    : Icon(Icons
-                                                        .remove_red_eye_outlined),
-                                                color: Colors.white,
-                                              ) //icon at tail of input
-                                              ),
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        height: size.height * 0.02,
-                                      ),
-                                      Align(
-                                        alignment: Alignment.bottomRight,
-                                        child: GestureDetector(
-                                          onTap: () => Get.to(
-                                              const ForgotPasswordScreen()),
-                                          child: Text(
-                                              textAlign: TextAlign.right,
-                                              'Forget password ?'),
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        height: size.height * 0.04,
-                                      ),
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              AppColors.primaryDark,
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(5)),
-                                          minimumSize: const Size(260, 60),
-                                        ),
-                                        onPressed: () {
-                                          controller.signIn();
-                                        },
-                                        child: const Text(
-                                          "Login Now",
-                                          style: TextStyle(
-                                              fontSize: 16,
-                                              letterSpacing: 1.1,
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w500),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: size.height * 0.04,
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Text(
-                                      "Vous n'avez pas de compte?",
-                                      textAlign: TextAlign.right,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.white,
-                                        height: 1.02,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: 5,
-                                    ),
-                                    GestureDetector(
-                                      onTap: () => Get.to(SignUpScreen()),
-                                      child: const Text(
-                                        "Créer un",
-                                        textAlign: TextAlign.right,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.primaryLight,
-                                          height: 1.02,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              ],
-                            ),
-                          ),
+                      const SizedBox(width: AppSpacing.md),
+                      const Text(
+                        'Grant Thornton',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1.2,
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
+
+                  const SizedBox(height: AppSpacing.huge),
+
+                  // ─── Welcome copy ────────────────────────────
+                  Text('Welcome back', style: theme.textTheme.displaySmall),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'Sign in to continue reading the latest\nbusiness insights from Algeria.',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.65),
+                      height: 1.45,
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.huge),
+
+                  // ─── Email ───────────────────────────────────
+                  TextFormField(
+                    controller: controller.email,
+                    validator: FieldsValidators.validatingEmail,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.email, AutofillHints.username],
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      hintText: 'you@company.com',
+                      prefixIcon: Icon(Icons.mail_outline_rounded),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // ─── Password ────────────────────────────────
+                  Obx(() => TextFormField(
+                        controller: controller.password,
+                        validator: (v) => FieldsValidators.validatingField('Password', v),
+                        obscureText: controller.hidePassword.value,
+                        textInputAction: TextInputAction.done,
+                        autofillHints: const [AutofillHints.password],
+                        onFieldSubmitted: (_) => controller.signIn(),
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          prefixIcon: const Icon(Icons.lock_outline_rounded),
+                          suffixIcon: IconButton(
+                            onPressed: () =>
+                                controller.hidePassword.value = !controller.hidePassword.value,
+                            icon: Icon(
+                              controller.hidePassword.value
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                            tooltip: controller.hidePassword.value
+                                ? 'Show password'
+                                : 'Hide password',
+                          ),
+                        ),
+                      )),
+
+                  const SizedBox(height: AppSpacing.md),
+
+                  // ─── Forgot password ─────────────────────────
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => Get.to(() => const ForgetPasswordScreen()),
+                      child: const Text('Forgot password?'),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // ─── Submit button ───────────────────────────
+                  Obx(() => ElevatedButton(
+                        onPressed: controller.isLoading.value ? null : controller.signIn,
+                        child: controller.isLoading.value
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.4,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Sign In'),
+                      )),
+
+                  const Spacer(),
+
+                  // ─── Signup link ─────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Don't have an account? ",
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => Get.to(() => const SignUpScreen()),
+                          child: Text(
+                            'Create one',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: AppColors.brandCoral,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
-
-
-/*
-
- Stack(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                fit: BoxFit.cover,
-                image: AssetImage(
-                  "assets/images/3d_bg.jpg",
-                ),
-              ),
-            ),
-          ),
-          Container(
-            color: Colors.black.withOpacity(0.5),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: size.height * 0.08,
-              horizontal: size.width * 0.08,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: Row(
-                    children: [
-                      Image(
-                        image: const AssetImage('assets/images/logo_gt.png'),
-                        height: size.width * 0.1,
-                      ),
-                      SizedBox(
-                        width: size.width * 0.01,
-                      ),
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Welcome to",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w400,
-                              color: Colors.white,
-                              height: 1.02,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            "Doing Business",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              height: 1.02,
-                              fontSize: 20,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  height: size.height * 0.18,
-                ),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: BackdropFilter(
-                    filter: new ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                    child: Container(
-                      width: size.width * 0.9,
-                      height: 400,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.4),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Hey",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w200,
-                              color: Colors.white,
-                              height: 1.02,
-                              fontSize: 25,
-                            ),
-                          ),
-                          const Text(
-                            "Connectez vous !!",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w300,
-                              color: Colors.white,
-                              height: 1.02,
-                              fontSize: 35,
-                            ),
-                          ),
-                          SizedBox(
-                            height: size.height * 0.05,
-                          ),
-                          Form(
-                            key: controller.siginKey,
-                            child: Column(
-                              children: [
-                                TextFormField(
-                                    controller: controller.email,
-                                    validator: (value) {
-                                      FieldsValidators.validatingEmail(value);
-                                    },
-                                    style: const TextStyle(color: Colors.white),
-                                    decoration: const InputDecoration(
-                                      fillColor: Colors.white,
-                                      hintText: "E-mail",
-                                      hintStyle: TextStyle(
-                                          color: Color.fromARGB(
-                                              255, 129, 129, 129)),
-                                      icon: Icon(
-                                        Icons.email,
-                                        color: Colors.white,
-                                      ),
-                                    )),
-                                SizedBox(
-                                  height: size.height * 0.03,
-                                ),
-                                Obx(
-                                  () => TextFormField(
-                                    style: const TextStyle(color: Colors.white),
-                                    controller: controller.password,
-                                    validator: (value) {
-                                      FieldsValidators.validatingField(
-                                          "Password", value);
-                                    },
-                                    obscureText: controller.hidePassword.value,
-                                    decoration: InputDecoration(
-                                        hintText: "password",
-                                        hintStyle: TextStyle(
-                                            color: Color.fromARGB(
-                                                255, 129, 129, 129)),
-                                        fillColor: Colors.white,
-                                        icon: Icon(
-                                          Icons.lock,
-                                          color: Colors.white,
-                                        ),
-                                        suffixIcon: IconButton(
-                                          onPressed: () => controller
-                                                  .hidePassword.value =
-                                              !controller.hidePassword.value,
-                                          icon: controller.hidePassword.value
-                                              ? Icon(Icons.remove_red_eye)
-                                              : Icon(Icons
-                                                  .remove_red_eye_outlined),
-                                          color: Colors.white,
-                                        ) //icon at tail of input
-                                        ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: size.height * 0.04,
-                                ),
-                                ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.primaryDark,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(5)),
-                                      minimumSize: const Size(260, 60),
-                                    ),
-                                    onPressed: () {
-                                      controller.signIn();
-                                    },
-                                    child: const Text(
-                                      "Login Now",
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          letterSpacing: 1.1,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500),
-                                    ))
-                              ],
-                            ),
-                          ),
-                          SizedBox(
-                            height: size.height * 0.04,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text(
-                                "Vous n'avez pas de compte?",
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                  height: 1.02,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              SizedBox(
-                                width: 5,
-                              ),
-                              GestureDetector(
-                                onTap: () => Get.to(SignUpScreen()),
-                                child: const Text(
-                                  "Créer un",
-                                  textAlign: TextAlign.right,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primaryLight,
-                                    height: 1.02,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ), */
