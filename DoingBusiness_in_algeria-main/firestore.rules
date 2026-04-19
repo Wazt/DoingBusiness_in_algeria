@@ -1,0 +1,95 @@
+rules_version = '2';
+
+// ════════════════════════════════════════════════════════════════════════
+//  Firestore Security Rules — DoingBusiness in Algeria
+//  UPDATED: supports LinkedIn-mirror articles with source/linkedinUrl fields
+// ════════════════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helpers ────────────────────────────────────────────────
+    function isSignedIn()      { return request.auth != null; }
+    function isOwner(uid)      { return isSignedIn() && request.auth.uid == uid; }
+    function isAdmin()         { return isSignedIn() && request.auth.token.admin == true; }
+
+    function isValidEditorialArticle(data) {
+      return data.keys().hasAll(['titre', 'blog', 'image', 'category'])
+          && data.titre is string
+          && data.titre.size() > 0
+          && data.titre.size() <= 200
+          && data.blog is string
+          && data.blog.size() <= 50000
+          && data.image is string
+          && (!('source' in data) || data.source == 'editorial');
+    }
+
+    function isValidLinkedInArticle(data) {
+      return data.source == 'linkedin'
+          && data.linkedinUrl is string
+          && data.linkedinUrl.matches('^https://(www\\.)?linkedin\\.com/.*$')
+          && data.externalUrl is string
+          && data.titre is string
+          && data.titre.size() > 0
+          && data.titre.size() <= 200
+          && data.blog is string
+          && data.blog.size() <= 5000
+          && data.addedBy is string
+          && data.addedBy == request.auth.uid
+          && data.addedAt == request.time;
+    }
+
+    // ─── Articles: public read, admin write, validated payload ──
+    match /Articles/{articleId} {
+      allow read: if true;
+
+      // Editorial articles: admins only, schema validated
+      allow create: if isAdmin()
+                    && (isValidEditorialArticle(request.resource.data)
+                        || isValidLinkedInArticle(request.resource.data));
+
+      // Updates: admins only. Cannot change source or linkedinUrl once set
+      // (prevents shenanigans like turning an editorial article into a fake LinkedIn one).
+      allow update: if isAdmin()
+                    && (resource.data.get('source', 'editorial')
+                        == request.resource.data.get('source', 'editorial'))
+                    && (resource.data.get('linkedinUrl', '')
+                        == request.resource.data.get('linkedinUrl', ''));
+
+      allow delete: if isAdmin();
+    }
+
+    // ─── Categories: public read, admin write ───────────────────
+    match /categories/{categoryId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── Users: owner-only ──────────────────────────────────────
+    match /Users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid)
+                    && request.resource.data.keys().hasOnly(
+                         ['username', 'email', 'fcmTokens', 'fcmTokenUpdatedAt', 'createdAt'])
+                    && request.resource.data.username is string
+                    && request.resource.data.email    is string
+                    && request.resource.data.username.size() >= 2
+                    && request.resource.data.username.size() <= 60;
+
+      allow update: if isOwner(uid)
+                    && (!('email' in request.resource.data.diff(resource.data).affectedKeys())
+                        || request.resource.data.email == resource.data.email);
+
+      allow delete: if isOwner(uid);
+
+      match /{subpath=**} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // ─── Default deny ───────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

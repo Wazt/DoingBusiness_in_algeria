@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:doingbusiness/presentation/Article/models/article_model.dart';
+import 'package:doingbusiness/data/models/article_model.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 

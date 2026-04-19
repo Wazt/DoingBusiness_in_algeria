@@ -1,7 +1,7 @@
 import 'dart:ffi';
 
 import 'package:doingbusiness/data/repository/article_repository.dart';
-import 'package:doingbusiness/presentation/Article/models/article_model.dart';
+import 'package:doingbusiness/data/models/article_model.dart';
 import 'package:doingbusiness/utils/loaders/loaders.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';

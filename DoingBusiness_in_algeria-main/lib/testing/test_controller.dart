@@ -1,5 +1,5 @@
 import 'package:doingbusiness/presentation/Article/controllers/article_controller.dart';
-import 'package:doingbusiness/presentation/Article/models/article_model.dart';
+import 'package:doingbusiness/data/models/article_model.dart';
 
 import 'package:get/get.dart';
 

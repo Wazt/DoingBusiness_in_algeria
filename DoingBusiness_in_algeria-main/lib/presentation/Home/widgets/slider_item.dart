@@ -1,5 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:doingbusiness/presentation/Article/models/article_model.dart';
+import 'package:doingbusiness/data/models/article_model.dart';
 import 'package:flutter/material.dart';
 
 class SliderItem extends StatelessWidget {

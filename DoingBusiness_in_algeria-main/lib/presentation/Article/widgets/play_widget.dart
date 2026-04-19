@@ -1,5 +1,5 @@
 import 'package:doingbusiness/core/configs/theme/app_colors.dart';
-import 'package:doingbusiness/presentation/Article/models/article_model.dart';
+import 'package:doingbusiness/data/models/article_model.dart';
 import 'package:doingbusiness/presentation/Article/pages/article_pdf.dart';
 import 'package:doingbusiness/presentation/Profile/controller/profile_controller.dart';
 import 'package:flutter/material.dart';

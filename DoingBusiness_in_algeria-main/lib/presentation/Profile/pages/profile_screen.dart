@@ -1,4 +1,6 @@
 import 'package:doingbusiness/core/configs/theme/app_colors.dart';
+import 'package:doingbusiness/data/repository/admin_repository.dart';
+import 'package:doingbusiness/presentation/admin/pages/admin_add_linkedin_screen.dart';
 import 'package:doingbusiness/presentation/Profile/controller/profile_controller.dart';
 import 'package:doingbusiness/presentation/Profile/pages/change_password_screen.dart';
 import 'package:doingbusiness/presentation/Profile/pages/delete_user_account.dart';
@@ -194,6 +196,36 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     )
                   ],
+                ),
+                FutureBuilder<bool>(
+                  future: Get.put(AdminRepository()).isCurrentUserAdmin(),
+                  builder: (context, snapshot) {
+                    if (snapshot.data != true) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 24, bottom: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Admin',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          ListTile(
+                            leading: const Icon(Icons.add_link_rounded,
+                                color: Color(0xFF0A66C2)),
+                            title: const Text('Mirror a LinkedIn post'),
+                            subtitle: const Text(
+                                'Add a post from Grant Thornton Algeria'),
+                            trailing: const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 16),
+                            onTap: () =>
+                                Get.to(() => const AdminAddLinkedInScreen()),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
                 SizedBox(
                   height: 50,
