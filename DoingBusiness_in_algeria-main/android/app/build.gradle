@@ -1,33 +1,14 @@
-// android/app/build.gradle — Production-ready
+// android/app/build.gradle — Production-ready (declarative plugins)
 // Play Store compliance: targetSdk 34 (mandatory since Aug 31, 2024)
-// Security: ProGuard + R8 obfuscation enabled
+// Security: ProGuard + R8 obfuscation on release builds
 // Safety: release build REFUSES to sign with debug keys
 
-def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader('UTF-8') { reader ->
-        localProperties.load(reader)
-    }
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.gms.google-services"
 }
-
-def flutterRoot = localProperties.getProperty('flutter.sdk')
-if (flutterRoot == null) {
-    throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
-}
-
-def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
-if (flutterVersionCode == null) { flutterVersionCode = '1' }
-
-def flutterVersionName = localProperties.getProperty('flutter.versionName')
-if (flutterVersionName == null) { flutterVersionName = '1.0' }
-
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
-apply plugin: 'com.google.gms.google-services'
-// Enable these once you wire Crashlytics (Phase 3)
-// apply plugin: 'com.google.firebase.crashlytics'
 
 // Read keystore config from android/key.properties (NEVER commit this file)
 def keystorePropertiesFile = rootProject.file('key.properties')
@@ -37,13 +18,14 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace "com.grantthorntondz.doingbusiness"   // mandatory since AGP 7.0
-    compileSdkVersion 34                             // was flutter.compileSdkVersion (~31)
+    namespace "com.grantthorntondz.doingbusiness"
+    compileSdkVersion 34
     ndkVersion flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17   // was 1.8
+        sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled true
     }
     kotlinOptions { jvmTarget = '17' }
 
@@ -53,19 +35,19 @@ android {
 
     defaultConfig {
         applicationId "com.grantthorntondz.doingbusiness"
-        minSdkVersion 23                             // Android 6.0 — 99%+ of devices
-        targetSdkVersion 34                          // MANDATORY for Play Store submissions since Aug 31, 2024
-        versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
+        minSdkVersion flutter.minSdkVersion
+        targetSdkVersion 34
+        versionCode flutter.versionCode
+        versionName flutter.versionName
         multiDexEnabled true
     }
 
     signingConfigs {
         release {
             if (keystorePropertiesFile.exists()) {
-                keyAlias     keystoreProperties['keyAlias']
-                keyPassword  keystoreProperties['keyPassword']
-                storeFile    keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+                keyAlias      keystoreProperties['keyAlias']
+                keyPassword   keystoreProperties['keyPassword']
+                storeFile     keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
                 storePassword keystoreProperties['storePassword']
             }
         }
@@ -73,31 +55,33 @@ android {
 
     buildTypes {
         debug {
-            applicationIdSuffix ".debug"             // separate app install alongside release
             debuggable true
             minifyEnabled false
         }
 
         release {
-            // HARD-FAIL if no keystore — prevents accidentally shipping debug-signed binaries
-            if (!keystorePropertiesFile.exists()) {
-                throw new GradleException(
-                    "\n\n⛔ Cannot build release: android/key.properties is missing.\n" +
-                    "   Create it from key.properties.sample and provide your keystore.\n\n")
+            // Only hard-fail when the user actually runs a release task.
+            // Debug builds ( `flutter run`, `assembleDebug`, etc.) must not trip this check.
+            def runningReleaseTask = gradle.startParameter.taskNames.any {
+                it.toLowerCase().contains('release') || it.toLowerCase().contains('bundle')
             }
-            signingConfig signingConfigs.release
+            if (runningReleaseTask && !keystorePropertiesFile.exists()) {
+                throw new GradleException(
+                    "\n\nCannot build release: android/key.properties is missing.\n" +
+                    "Create it from key.properties.sample and provide your keystore.\n\n")
+            }
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
 
-            minifyEnabled true                       // R8 / ProGuard
+            minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
-            // Strip debug symbols for smaller .aab
             ndk { debugSymbolLevel 'SYMBOL_TABLE' }
         }
     }
 
-    // Play App Signing is recommended — you upload an .aab signed with your upload key,
-    // Google re-signs it with the distribution key on their side.
     bundle {
         language { enableSplit = true }
         density  { enableSplit = true }
@@ -116,10 +100,9 @@ flutter {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.multidex:multidex:2.0.1'
-
     // Firebase BoM: single source of truth for Firebase library versions
     implementation platform('com.google.firebase:firebase-bom:33.5.0')
-    // Add individual Firebase libs (they're auto-pulled by FlutterFire plugins, this is a safety net)
+    // Required by flutter_local_notifications for Java 8+ API backport on older Android
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
 }

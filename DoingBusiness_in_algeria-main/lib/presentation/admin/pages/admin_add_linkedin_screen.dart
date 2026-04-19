@@ -357,8 +357,8 @@ class _Step2Review extends StatelessWidget {
                       value: '',
                       child: Text('— No category —'),
                     ),
-                    ...categoryController.allCategories.map((c) => DropdownMenuItem(
-                          value: c.id,
+                    ...categoryController.allCategories.map((c) => DropdownMenuItem<String>(
+                          value: c.id.toString(),
                           child: Text(c.name),
                         )),
                   ],

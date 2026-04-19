@@ -129,7 +129,7 @@ class LoginScreen extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () => Get.to(() => const ForgetPasswordScreen()),
+                      onPressed: () => Get.to(() => ForgotPasswordScreen()),
                       child: const Text('Forgot password?'),
                     ),
                   ),

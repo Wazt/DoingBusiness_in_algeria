@@ -124,7 +124,7 @@ class HomeScreen extends StatelessWidget {
                       final c = categoryController.featuredCategories[i];
                       return ActionChip(
                         label: Text(c.name),
-                        onPressed: () => articleController.filterByCategory(c.id),
+                        onPressed: () => articleController.filterByCategory(c.id.toString()),
                       );
                     },
                   );
@@ -146,10 +146,10 @@ class HomeScreen extends StatelessWidget {
 
             Obx(() {
               if (articleController.isLoading.value) {
-                return const SliverPadding(
-                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                return SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                   sliver: SliverList.list(
-                    children: [_ListItemSkeleton(), _ListItemSkeleton(), _ListItemSkeleton()],
+                    children: const [_ListItemSkeleton(), _ListItemSkeleton(), _ListItemSkeleton()],
                   ),
                 );
               }

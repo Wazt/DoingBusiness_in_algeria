@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 class SignInController extends GetxController {
   SignInController get instance => Get.find();
   final hidePassword = true.obs;
+  final isLoading = false.obs;
   final email = TextEditingController();
   final password = TextEditingController();
 

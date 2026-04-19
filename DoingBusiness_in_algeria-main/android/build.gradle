@@ -1,21 +1,6 @@
-// android/build.gradle (ROOT) — UPGRADED for Google Play Aug 2024+ compliance
-
-buildscript {
-    ext.kotlin_version = '1.9.22'  // was 1.7.10
-
-    repositories {
-        google()
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.3.2'           // was 4.2.2
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.google.gms:google-services:4.4.1'           // was 4.3.10
-        // Uncomment when Crashlytics is added (Phase 3)
-        // classpath 'com.google.firebase:firebase-crashlytics-gradle:3.0.1'
-    }
-}
+// android/build.gradle (ROOT) — declarative-plugins style for Flutter 3.29+
+// Plugin versions are pinned in android/settings.gradle (AGP 8.3.2, Kotlin 1.9.22,
+// Google Services 4.4.1). targetSdk/compileSdk and ProGuard config are in android/app/build.gradle.
 
 allprojects {
     repositories {
@@ -27,8 +12,6 @@ allprojects {
 rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-subprojects {
     project.evaluationDependsOn(':app')
 }
 

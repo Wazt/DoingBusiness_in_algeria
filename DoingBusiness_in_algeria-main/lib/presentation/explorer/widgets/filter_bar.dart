@@ -20,7 +20,7 @@ class FilterBar extends StatelessWidget {
             ),
             label: Text('All'),
             onSelected: (value) {
-              controller.resetList();
+              controller.resetFilter();
             }),
         SizedBox(
           width: 10,
@@ -40,7 +40,7 @@ class FilterBar extends StatelessWidget {
                     style: TextStyle(color: Colors.white),
                   ),
                   onSelected: (value) {
-                    controller.chooseCat(category['id'].toString());
+                    controller.filterByCategory(category['id'].toString());
                   },
                 ),
               );

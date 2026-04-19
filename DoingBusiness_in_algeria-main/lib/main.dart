@@ -29,13 +29,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await GetStorage.init();
-  await LocalNotification.init();
+  await NotificationRepository.init();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)
       .then((FirebaseApp value) => Get.put(AuthenticationRepository()));
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  NotificationController().initializeFirebaseMessaging();
+  await NotificationController.instance.initialize();
 
   runApp(MyApp());
 }
