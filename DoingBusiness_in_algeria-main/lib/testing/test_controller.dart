@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:doingbusiness/presentation/Article/controllers/article_controller.dart';
 import 'package:doingbusiness/presentation/Article/models/article_model.dart';
 
@@ -33,7 +34,7 @@ class TestController extends GetxController {
           (p0) => p0.categoryId == index,
         )
         .toList();
-    print(selectedCat);
+    debugPrint(selectedCat);
   }
 
   /*
@@ -41,6 +42,6 @@ class TestController extends GetxController {
     itemModel = ItemModel(itemName: itemName, itemValue: itemValue);
     itemList.value.add(itemModel);
     itemCount.value = itemList.value.length;
-    print(itemList);
+    debugPrint(itemList);
   }*/
 }

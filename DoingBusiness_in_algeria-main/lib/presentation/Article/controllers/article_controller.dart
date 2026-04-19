@@ -1,67 +1,83 @@
+import 'package:flutter/foundation.dart';
+import 'dart:ffi';
+
 import 'package:doingbusiness/data/repository/article_repository.dart';
 import 'package:doingbusiness/presentation/Article/models/article_model.dart';
 import 'package:doingbusiness/utils/loaders/loaders.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// ════════════════════════════════════════════════════════════════════════
-///  ArticleController — cleaned up
-/// ════════════════════════════════════════════════════════════════════════
-///  Bugs fixed:
-///    ✘ import 'dart:ffi' — removed (breaks web, was unused)
-///    ✘ print(selectedCat), print("fetching"), print('update the fetching'),
-///      print(_storage.read('fontsize')) — all removed
-///    ✔ onInit() now awaits properly (was calling async work without await)
-///    ✔ filteredArticles refreshes reactively when featuredArticles changes
-/// ════════════════════════════════════════════════════════════════════════
 class ArticleController extends GetxController {
   static ArticleController get instance => Get.find();
 
   final isLoading = false.obs;
-  final RxList<ArticleModel> featuredArticles  = <ArticleModel>[].obs;
-  final RxList<ArticleModel> filteredArticles  = <ArticleModel>[].obs;
-  final RxList<String>       selectedCategoryIds = <String>[].obs;
+  RxList<ArticleModel> featuredArticles = <ArticleModel>[].obs;
 
-  final RxDouble fontSizeValue = 16.0.obs;
+  ArticleRepository articleRepo = Get.put(ArticleRepository());
 
-  final ArticleRepository articleRepo = Get.put(ArticleRepository());
-  final GetStorage _storage = GetStorage();
+  RxList selectedCat = [].obs;
+  RxList<ArticleModel> filteredArticles = <ArticleModel>[].obs;
+  RxBool selected = false.obs;
+
+  RxDouble fontSizeValue = 16.0.obs;
+
+  GetStorage _storage = GetStorage();
 
   @override
-  Future<void> onInit() async {
+  void onInit() async {
+    fetchFeaturedArticles();
+    await _storage.writeIfNull('fontsize', fontSizeValue);
+    resetList();
     super.onInit();
-    fontSizeValue.value = (_storage.read('fontsize') as num?)?.toDouble() ?? 16.0;
-    await fetchFeaturedArticles();
   }
 
-  Future<void> saveFontSize(double value) async {
-    fontSizeValue.value = value;
-    await _storage.write('fontsize', value);
-    Loaders.successSnackBar(title: 'Success', message: 'Font size updated');
+  /*
+   * Working on the saving system
+   * When clicking on the saving button, add the current article to the saved list
+   * at first the saved list is empty, and pushing into it (stack)
+   * 
+   * 
+   * 
+   */
+
+  saveFontSize(double fontsizeVal) async {
+    await _storage.write('fontsize', fontsizeVal);
+
+    Loaders.successSnackBar(title: "Success", message: 'Font size Updated');
+    debugPrint(_storage.read('fontsize'));
   }
 
-  void resetFilter() {
-    selectedCategoryIds.clear();
-    filteredArticles.assignAll(featuredArticles);
+  resetList() {
+    filteredArticles.value = featuredArticles;
   }
 
-  void filterByCategory(String categoryId) {
-    selectedCategoryIds
-      ..clear()
-      ..add(categoryId);
-    filteredArticles.assignAll(
-      featuredArticles.where((a) => a.categoryId == categoryId),
-    );
+  chooseCat(String index) {
+    selectedCat.value = [];
+    selectedCat.add(index);
+    filteredArticles.value = featuredArticles
+        .where(
+          (p0) => p0.categoryId == index,
+        )
+        .toList();
+    debugPrint(selectedCat);
   }
 
   Future<void> fetchFeaturedArticles() async {
     try {
+      //start the loading
+      debugPrint("fetching");
       isLoading.value = true;
+
+      //fetch articles
+
       final articles = await articleRepo.getFeaturedArticles();
+      debugPrint('update the fetching');
+      //assign the articles
+
       featuredArticles.assignAll(articles);
-      filteredArticles.assignAll(articles);
     } catch (e) {
-      Loaders.errorSnackBar(title: 'Could not load articles', message: e.toString());
+      Loaders.errorSnackBar(title: 'Oh snap', message: e.toString());
     } finally {
       isLoading.value = false;
     }

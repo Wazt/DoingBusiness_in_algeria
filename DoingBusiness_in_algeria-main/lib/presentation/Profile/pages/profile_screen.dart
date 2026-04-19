@@ -165,7 +165,7 @@ class ProfileScreen extends StatelessWidget {
                         value: profileController.isDarkMode.value,
                         onChanged: (value) {
                           profileController.isDarkMode.value = value;
-                          print(value);
+                          debugPrint(value);
                           profileController.darkModeSwitch(value);
                         },
                       ),

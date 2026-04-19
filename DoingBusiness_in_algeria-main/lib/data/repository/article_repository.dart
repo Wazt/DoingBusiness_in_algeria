@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:doingbusiness/presentation/Article/models/article_model.dart';
 import 'package:flutter/services.dart';
@@ -13,7 +14,7 @@ class ArticleRepository extends GetxController {
   Future<List<ArticleModel>> getFeaturedArticles() async {
     try {
       final snapshot = await _db.collection('Articles').get();
-      print('fetching from firebase');
+      debugPrint('fetching from firebase');
 
       // return a list of articles
 
