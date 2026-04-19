@@ -5,54 +5,48 @@ import 'package:doingbusiness/presentation/Article/models/categorie_model.dart';
 import 'package:doingbusiness/utils/loaders/loaders.dart';
 import 'package:get/get.dart';
 
+/// ════════════════════════════════════════════════════════════════════════
+///  CategoryController — fixed
+/// ════════════════════════════════════════════════════════════════════════
+///  Bugs fixed:
+///    ✘ Loaders.errorSnackBar(message: e.toString)  ← missing ()
+///       → Snackbar would show "Closure: () => String" to users.
+///    ✔ Now: message: e.toString()
+/// ════════════════════════════════════════════════════════════════════════
 class CategoryController extends GetxController {
   static CategoryController get instance => Get.find();
 
   final isLoading = false.obs;
   final _categoryRepo = Get.put(CategoryRepository());
-  RxList<CategorieModel> allCategories = <CategorieModel>[].obs;
-  RxList<CategorieModel> featuredCategory = <CategorieModel>[].obs;
+
+  final RxList<CategorieModel> allCategories      = <CategorieModel>[].obs;
+  final RxList<CategorieModel> featuredCategories = <CategorieModel>[].obs;
 
   @override
   void onInit() {
-    fetchCategories();
     super.onInit();
+    fetchCategories();
   }
-
-  //load categories data
 
   Future<void> fetchCategories() async {
     try {
-      //show loader
-
       isLoading.value = true;
-
-      //fetch categories from data sources
-
       final categories = await _categoryRepo.fetchAllCategories();
-
-      // Update the category list
-
       allCategories.assignAll(categories);
-
-      //Filter featured category
-
-      featuredCategory.assignAll(allCategories
-          .where((category) => category.isFeatured && category.parentId.isEmpty)
-          .toList());
+      featuredCategories.assignAll(
+        allCategories.where((c) => c.isFeatured && c.parentId.isEmpty),
+      );
     } catch (e) {
-      Loaders.errorSnackBar(title: "oh snap", message: e.toString);
+      Loaders.errorSnackBar(
+        title: 'Could not load categories',
+        message: e.toString(),  // ← FIXED: was e.toString without ()
+      );
     } finally {
       isLoading.value = false;
     }
   }
-  //load selected category data
-
-  // get category articles
 
   Future<List<ArticleModel>> getCategoryArticles(String categoryId) async {
-    final articles = await ArticleRepository.instance
-        .getCategoryArticles(categoryId: categoryId);
-    return articles;
+    return ArticleRepository.instance.getCategoryArticles(categoryId: categoryId);
   }
 }

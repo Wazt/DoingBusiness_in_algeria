@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '503441830389',
     projectId: 'doingbusinessbygrantthornton',
     storageBucket: 'doingbusinessbygrantthornton.appspot.com',
-    iosBundleId: 'com.example.doingbusiness',
+    iosBundleId: 'com.grantthorntondz.doingbusiness',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '503441830389',
     projectId: 'doingbusinessbygrantthornton',
     storageBucket: 'doingbusinessbygrantthornton.appspot.com',
-    iosBundleId: 'com.example.doingbusiness',
+    iosBundleId: 'com.grantthorntondz.doingbusiness',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

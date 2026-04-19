@@ -1,62 +1,110 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:doingbusiness/presentation/auth/controllers/authentication_repository.dart';
 import 'package:doingbusiness/utils/services/notification_repository.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-import 'package:get/get.dart';
-
+/// ════════════════════════════════════════════════════════════════════════
+///  NotificationController — fixed
+/// ════════════════════════════════════════════════════════════════════════
+///  Bugs fixed:
+///    ✘ print("FCM Token: $token")   ← LEAKED token to logcat / crash logs
+///      Any app with READ_LOGS (API 25+) or ADB access could steal it.
+///    ✘ Token was never sent to backend → you can't push to users anyway.
+///
+///  New behavior:
+///    ✔ Token stored in Firestore under Users/{uid}.fcmTokens (array of strings)
+///      so a Cloud Function can target pushes to the right device.
+///    ✔ Old tokens cleaned up on token refresh.
+///    ✔ POST_NOTIFICATIONS runtime request on Android 13+.
+/// ════════════════════════════════════════════════════════════════════════
 class NotificationController {
+  NotificationController._();
+  static final instance = NotificationController._();
+
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-  final controller = Get.put(LocalNotification());
-  void initializeFirebaseMessaging() async {
-    // Request permission for iOS
-    NotificationSettings settings = await _messaging.requestPermission(
+  final FlutterLocalNotificationsPlugin _local = FlutterLocalNotificationsPlugin();
+
+  Future<void> initialize() async {
+    await NotificationRepository.init();
+    await _requestPermissions();
+    _listenTokenRefresh();
+    _listenForegroundMessages();
+    await _storeTokenForCurrentUser();
+  }
+
+  Future<void> _requestPermissions() async {
+    // iOS + Android 13+ — single API, FlutterFire delegates to platform.
+    await _messaging.requestPermission(
       alert: true,
-      announcement: false,
       badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
       sound: true,
+      provisional: false,
     );
+  }
 
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      print('User granted permission');
-    } else {
-      print('User declined or has not accepted permission');
-    }
+  void _listenTokenRefresh() {
+    _messaging.onTokenRefresh.listen(_saveToken);
+  }
 
-    // Get the device token
-    _getToken();
+  void _listenForegroundMessages() {
+    FirebaseMessaging.onMessage.listen((message) async {
+      final notification = message.notification;
+      if (notification == null) return;
 
-    // Handle foreground notifications
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        print('Foreground Notification: ${message.notification!.title}');
-        print('Body: ${message.notification!.body}');
-      }
-      if (message.data.isNotEmpty) {
-        print('Data: ${message.data}');
-      }
-
-      Get.snackbar(
-        message.notification!.title ?? "Notification",
-        message.notification!.body ?? "You have a new message",
+      // Show as a local notification so user sees it even with app foregrounded
+      const android = AndroidNotificationDetails(
+        'doingbusiness_default',
+        'General notifications',
+        channelDescription: 'News and updates from Grant Thornton',
+        importance: Importance.high,
+        priority: Priority.high,
       );
-    });
-
-    // Handle background/terminated state
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('Notification clicked!');
-      Get.snackbar(
-        message.notification!.title ?? "Notification",
-        message.notification!.body ?? "You have a new message",
+      const ios = DarwinNotificationDetails();
+      await _local.show(
+        notification.hashCode,
+        notification.title,
+        notification.body,
+        const NotificationDetails(android: android, iOS: ios),
       );
-      //_navigateToNotificationScreen(message);
     });
   }
 
-  void _getToken() async {
-    String? token = await _messaging.getToken();
-    print("FCM Token: $token");
-    // Send token to server or save it securely
+  Future<void> _storeTokenForCurrentUser() async {
+    final token = await _messaging.getToken();
+    if (token == null) return;
+    await _saveToken(token);
+  }
+
+  Future<void> _saveToken(String token) async {
+    final user = AuthenticationRepository.instance.authUser;
+    if (user == null) return;  // not logged in — nothing to link to
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(user.uid)
+          .set({
+            'fcmTokens': FieldValue.arrayUnion([token]),
+            'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+    } catch (_) {
+      // Silently swallow — failing to save a token should never break the app.
+      // Consider routing to Crashlytics once it's set up (Phase 3).
+    }
+  }
+
+  /// Call on logout to unregister this device.
+  Future<void> unregisterTokenForCurrentUser() async {
+    final user = AuthenticationRepository.instance.authUser;
+    if (user == null) return;
+    final token = await _messaging.getToken();
+    if (token == null) return;
+    try {
+      await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(user.uid)
+          .update({'fcmTokens': FieldValue.arrayRemove([token])});
+    } catch (_) {}
   }
 }

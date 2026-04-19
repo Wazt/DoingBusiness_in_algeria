@@ -7,5 +7,5 @@ class AppColors {
   static const dangerRed = Color(0xFFCE2C2C);
   static const mediumGreen = Color(0xFFAFDF5B);
 
-  static const warrningOrange = Color(0xFFF48950);
+  static const warningOrange = Color(0xFFF48950);
 }
