@@ -1,50 +1,117 @@
 import 'dart:async';
-
 import 'package:doingbusiness/presentation/auth/controllers/authentication_repository.dart';
 import 'package:doingbusiness/utils/loaders/loaders.dart';
 import 'package:doingbusiness/utils/pages/success_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 
+/// ════════════════════════════════════════════════════════════════════════
+///  EmailVerificationController — fixed
+/// ════════════════════════════════════════════════════════════════════════
+///  Previous bugs:
+///    ✘ Timer.periodic(1 second) hammered FirebaseAuth.reload() forever
+///    ✘ Timer was never cancelled on screen close
+///    ✘ Typo in method name "sendEmailVerification"
+///
+///  New behavior:
+///    ✔ Polling every 3 seconds (was 1 — reduces load by 3x)
+///    ✔ Auto-stops after 10 minutes so an abandoned screen doesn't drain battery
+///    ✔ Timer always cancelled in onClose()
+///    ✔ Resend button is rate-limited (30s cooldown) so users can't flood Firebase
+/// ════════════════════════════════════════════════════════════════════════
 class EmailVerificationController extends GetxController {
   static EmailVerificationController get instance => Get.find();
 
-  // send email whenever verify screen appears & set timer for auto redirect
+  Timer? _pollingTimer;
+  Timer? _autoStopTimer;
+  DateTime? _lastResentAt;
+
+  final isResending = false.obs;
+  final canResendIn = 0.obs;  // seconds until resend is allowed
+  Timer? _cooldownTicker;
+
   @override
   void onInit() {
-    sendEmailVerificaiton();
-    setTimerForAutoRedirect();
+    sendEmailVerification();
+    _startPolling();
     super.onInit();
   }
 
-  //send email verification link
-  sendEmailVerificaiton() async {
+  Future<void> sendEmailVerification() async {
+    // Rate-limit: one resend every 30 seconds max.
+    final now = DateTime.now();
+    if (_lastResentAt != null && now.difference(_lastResentAt!).inSeconds < 30) {
+      final wait = 30 - now.difference(_lastResentAt!).inSeconds;
+      Loaders.warningSnackBar(
+        title: 'Please wait',
+        message: 'You can request a new email in $wait seconds.',
+      );
+      return;
+    }
+
     try {
-      await AuthenticationRepository.instance.sendEmailVerificaiton();
-      Loaders.successSnackBar(
-          title: "Email sent", message: 'Please, check your inbox');
+      isResending.value = true;
+      await AuthenticationRepository.instance.sendEmailVerification();
+      _lastResentAt = now;
+      _startCooldownTicker();
+      Loaders.successSnackBar(title: 'Email sent', message: 'Check your inbox.');
     } catch (e) {
-      Loaders.warrningSnackBar(title: 'oh snap', message: e.toString());
+      Loaders.errorSnackBar(title: 'Could not send email', message: e.toString());
+    } finally {
+      isResending.value = false;
     }
   }
 
-  //Timer to auto redirect to email verification
-  setTimerForAutoRedirect() {
-    Timer.periodic(const Duration(seconds: 1), (timer) async {
+  void _startPolling() {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
       await FirebaseAuth.instance.currentUser?.reload();
       final user = FirebaseAuth.instance.currentUser;
       if (user?.emailVerified ?? false) {
-        timer.cancel();
+        _pollingTimer?.cancel();
+        _autoStopTimer?.cancel();
         Get.off(() => const SuccessScreen());
       }
     });
-  }
-  // manualy check if email verified
 
-  checkEmailVerificationStatus() async {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null && currentUser.emailVerified) {
-      Get.off(SuccessScreen());
+    // Auto-stop after 10 minutes to save battery / quota
+    _autoStopTimer = Timer(const Duration(minutes: 10), () {
+      _pollingTimer?.cancel();
+    });
+  }
+
+  void _startCooldownTicker() {
+    _cooldownTicker?.cancel();
+    canResendIn.value = 30;
+    _cooldownTicker = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (canResendIn.value <= 0) {
+        t.cancel();
+      } else {
+        canResendIn.value--;
+      }
+    });
+  }
+
+  /// Manual check on button press (user is impatient / polling stopped)
+  Future<void> checkEmailVerificationStatus() async {
+    await FirebaseAuth.instance.currentUser?.reload();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && user.emailVerified) {
+      Get.off(() => const SuccessScreen());
+    } else {
+      // Restart polling if it had auto-stopped
+      if (_pollingTimer?.isActive != true) _startPolling();
+      Loaders.warningSnackBar(
+        title: 'Not yet verified',
+        message: 'We couldn\'t confirm verification. Please check your inbox.',
+      );
     }
+  }
+
+  @override
+  void onClose() {
+    _pollingTimer?.cancel();
+    _autoStopTimer?.cancel();
+    _cooldownTicker?.cancel();
+    super.onClose();
   }
 }

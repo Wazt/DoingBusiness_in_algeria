@@ -45,7 +45,7 @@ class ArticleRepository extends GetxController {
           .toList();
       return articles;
     } catch (e) {
-      throw 'somehting went south';
+      throw 'something went south';
     }
   }
 }

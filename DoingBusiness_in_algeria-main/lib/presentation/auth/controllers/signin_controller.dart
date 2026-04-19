@@ -20,8 +20,8 @@ class SignInController extends GetxController {
           "Sign in .....", "assets/images/loading_animation.json");
 
       //check for internet connection
-      final isConncted = await NetworkManager.instance.isConnected();
-      if (!isConncted) {
+      final isConnected = await NetworkManager.instance.isConnected();
+      if (!isConnected) {
         FullScreenLoader.stopLoading();
 
         return;
@@ -43,7 +43,7 @@ class SignInController extends GetxController {
       AuthenticationRepository.instance.screenRedirect();
     } catch (e) {
       FullScreenLoader.stopLoading();
-      Loaders.warrningSnackBar(title: 'Oh Snap', message: e.toString());
+      Loaders.warningSnackBar(title: 'Oh Snap', message: e.toString());
     }
   }
 }

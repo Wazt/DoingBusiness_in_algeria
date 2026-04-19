@@ -137,7 +137,7 @@ class EmailVerificationScreen extends StatelessWidget {
                           ),
                           GestureDetector(
                             onTap: () {
-                              controller.sendEmailVerificaiton();
+                              controller.sendEmailVerification();
                             },
                             child: Text(
                               "Resend email",

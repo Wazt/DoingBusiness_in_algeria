@@ -21,12 +21,12 @@ class UserRepository extends GetxController {
 
   Future<UserModel> fetchUserDetails() async {
     try {
-      final doucmentSnapshot = await _db
+      final documentSnapshot = await _db
           .collection("Users")
           .doc(AuthenticationRepository.instance.authUser?.uid)
           .get();
-      if (doucmentSnapshot.exists) {
-        return UserModel.fromSnapshot(doucmentSnapshot);
+      if (documentSnapshot.exists) {
+        return UserModel.fromSnapshot(documentSnapshot);
       } else {
         return UserModel.empty();
       }
@@ -46,7 +46,7 @@ class UserRepository extends GetxController {
     } on FirebaseException catch (e) {
       throw e.message.toString();
     } catch (e) {
-      throw 'Unkown error';
+      throw 'Unknown error';
     }
   }
 
@@ -59,7 +59,7 @@ class UserRepository extends GetxController {
     } on FirebaseException catch (e) {
       throw e.message.toString();
     } catch (e) {
-      throw 'Unkown error has occured';
+      throw 'Unknown error has occured';
     }
   }
 
@@ -69,7 +69,11 @@ class UserRepository extends GetxController {
     } on FirebaseException catch (e) {
       throw e.message.toString();
     } catch (e) {
-      throw 'Unkown error has occured';
+      throw 'Unknown error has occured';
     }
+  }
+
+  Future<void> deleteUserRecord(String uid) async {
+    await _db.collection('Users').doc(uid).delete();
   }
 }

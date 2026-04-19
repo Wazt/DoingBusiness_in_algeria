@@ -99,7 +99,7 @@ class ProfileScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     InfoWidget(
-                      widgetColor: AppColors.warrningOrange,
+                      widgetColor: AppColors.warningOrange,
                       widgetIcon: Icons.lock_outline_rounded,
                       widgetText: "*********",
                       widgetTitle: 'Change password',

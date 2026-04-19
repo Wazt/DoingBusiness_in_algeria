@@ -1,12 +1,12 @@
 import 'package:doingbusiness/core/configs/theme/app_colors.dart';
-import 'package:doingbusiness/data/repository/user_repository.dart';
-import 'package:doingbusiness/presentation/Profile/controller/profile_controller.dart';
 import 'package:doingbusiness/presentation/auth/controllers/authentication_repository.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class DeleteUserAccount extends StatelessWidget {
-  final userRepo = Get.put(ProfileController());
+  DeleteUserAccount({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,25 +17,16 @@ class DeleteUserAccount extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GestureDetector(
-                onTap: () {
-                  Get.back();
-                },
-                child: Icon(Icons.arrow_back_ios_new_outlined),
+                onTap: () => Get.back(),
+                child: const Icon(Icons.arrow_back_ios_new_outlined),
               ),
-              SizedBox(
-                height: 10,
-              ),
-              Text(
+              const SizedBox(height: 10),
+              const Text(
                 'Delete your account',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
               ),
-              SizedBox(
-                height: 10,
-              ),
-              Text(
+              const SizedBox(height: 10),
+              const Text(
                 "If you’re facing any issues with the app, we’d love to hear your feedback. Let us know what’s bothering you, and we’ll work on improving your experience!",
                 style: TextStyle(
                   fontSize: 16,
@@ -43,28 +34,25 @@ class DeleteUserAccount extends StatelessWidget {
                   color: Colors.grey,
                 ),
               ),
-              SizedBox(
-                height: 30,
-              ),
+              const SizedBox(height: 30),
               Center(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.warrningOrange,
+                    backgroundColor: AppColors.warningOrange,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(5),
                     ),
                     minimumSize: const Size(260, 60),
                   ),
-                  onPressed: () {
-                    userRepo.deleteAccountController();
-                  },
+                  onPressed: () => _confirmAndDelete(context),
                   child: const Text(
                     "Proceed",
                     style: TextStyle(
-                        fontSize: 16,
-                        letterSpacing: 1.1,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500),
+                      fontSize: 16,
+                      letterSpacing: 1.1,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
@@ -73,5 +61,41 @@ class DeleteUserAccount extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmAndDelete(BuildContext context) async {
+    final password = await showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        final controller = TextEditingController();
+        return AlertDialog(
+          title: const Text('Confirm with your password'),
+          content: TextField(
+            controller: controller,
+            obscureText: true,
+            autofocus: true,
+            decoration: const InputDecoration(hintText: 'Password'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, controller.text),
+              child: const Text('Delete account'),
+            ),
+          ],
+        );
+      },
+    );
+    if (password == null || password.isEmpty) return;
+
+    final email = FirebaseAuth.instance.currentUser?.email ?? '';
+    try {
+      await AuthenticationRepository.instance.deleteUserAccount(email, password);
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    }
   }
 }

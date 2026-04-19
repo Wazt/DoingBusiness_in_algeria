@@ -1,32 +1,50 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:get/get.dart';
-import 'package:timezone/timezone.dart' as tz;
 
-class LocalNotification {
-  //setup
-  static FlutterLocalNotificationsPlugin flutterLocalNotificationPlugin =
-      FlutterLocalNotificationsPlugin();
+/// ════════════════════════════════════════════════════════════════════════
+///  NotificationRepository — fixed
+/// ════════════════════════════════════════════════════════════════════════
+///  Previous bug:
+///    ✘ Only AndroidInitializationSettings was passed — iOS notifications
+///      silently broken (the plugin needs DarwinInitializationSettings too).
+///
+///  Fix:
+///    ✔ Both platforms initialized
+///    ✔ Android 13+ runtime permission explicitly requested via
+///      AndroidFlutterLocalNotificationsPlugin (FCM doesn't cover this).
+/// ════════════════════════════════════════════════════════════════════════
+class NotificationRepository {
+  NotificationRepository._();
+
+  static final _plugin = FlutterLocalNotificationsPlugin();
 
   static Future<void> init() async {
-    InitializationSettings settings = InitializationSettings(
-      android: AndroidInitializationSettings("@mipmap/ic_launcher"),
+    const initializationSettings = InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      iOS: DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      ),
     );
 
-    flutterLocalNotificationPlugin.initialize(settings,
-        onDidReceiveBackgroundNotificationResponse: (details) {},
-        onDidReceiveNotificationResponse: (details) {});
+    await _plugin.initialize(initializationSettings);
+
+    // Android 13+ (API 33+) — POST_NOTIFICATIONS is a runtime permission
+    await _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
+
+    // Create default channel up front so users see sensible defaults
+    // in Android System Settings → App → Notifications.
+    await _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(const AndroidNotificationChannel(
+          'doingbusiness_default',
+          'General notifications',
+          description: 'News and updates from Grant Thornton',
+          importance: Importance.high,
+        ));
   }
 
-  //basic notification
-  static void showBasicNotification() async {
-    NotificationDetails details = NotificationDetails(
-        android: AndroidNotificationDetails('channelId', "channelName",
-            importance: Importance.max, priority: Priority.high));
-    await flutterLocalNotificationPlugin.show(
-        0, "title", "message body", details);
-  }
-
-  //repeated notification
-
-  //scheduled notification
+  static FlutterLocalNotificationsPlugin get plugin => _plugin;
 }

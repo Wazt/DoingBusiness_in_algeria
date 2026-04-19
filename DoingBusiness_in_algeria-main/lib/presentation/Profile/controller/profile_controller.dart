@@ -73,8 +73,7 @@ class ProfileController extends GetxController {
                           borderRadius: BorderRadius.circular(5),
                         ),
                       ),
-                      onPressed: () =>
-                          AuthenticationRepository.instance.deleteUserAccount(),
+                      onPressed: () => Get.back(),
                       child: Text("Delete"),
                     ),
                   ],

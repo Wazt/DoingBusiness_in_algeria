@@ -42,7 +42,7 @@ class UserController extends GetxController {
         await userRepo.saveUserRecord(user);
       }
     } catch (e) {
-      Loaders.warrningSnackBar(
+      Loaders.warningSnackBar(
           title: "Data not saved",
           message: "Something went wrong during the process");
     }

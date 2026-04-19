@@ -59,7 +59,7 @@ class MainWrapper extends StatelessWidget {
                       _bottomAppBarItem(context,
                           icon: Icons.gps_fixed_outlined,
                           page: 1,
-                          label: "Dsicover"),
+                          label: "Discover"),
                       /*_bottomAppBarItem(context,
                           icon: Icons.bookmark, page: 2, label: "Saved"),*/
                       _bottomAppBarItem(context,
@@ -87,7 +87,7 @@ class MainWrapper extends StatelessWidget {
                 _bottomAppBarItem(context,
                     icon: Icons.home_outlined, page: 0, label: "Home"),
                 _bottomAppBarItem(context,
-                    icon: Icons.gps_fixed_outlined, page: 1, label: "Dsicover"),
+                    icon: Icons.gps_fixed_outlined, page: 1, label: "Discover"),
                 _bottomAppBarItem(context,
                     icon: Icons.person_outline_outlined,
                     page: 2,
