@@ -3,7 +3,7 @@ import 'package:doingbusiness/core/configs/theme/app_colors.dart';
 import 'package:doingbusiness/core/configs/theme/app_spacing.dart';
 import 'package:doingbusiness/presentation/Article/controllers/article_controller.dart';
 import 'package:doingbusiness/presentation/Article/controllers/category_controller.dart';
-import 'package:doingbusiness/presentation/Article/models/article_model.dart';
+import 'package:doingbusiness/data/models/article_model.dart';
 import 'package:doingbusiness/presentation/Article/pages/article_screen.dart';
 import 'package:doingbusiness/presentation/auth/controllers/user_controller.dart';
 import 'package:flutter/material.dart';
