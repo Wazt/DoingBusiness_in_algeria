@@ -1,0 +1,14 @@
+{
+  "name": "doingbusiness-admin-scripts",
+  "version": "1.0.0",
+  "description": "One-off admin scripts for the DoingBusiness Firebase project — seeding, claim management.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "seed:users": "node seed-users.mjs",
+    "grant": "node grant-admin.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.5.0"
+  }
+}
