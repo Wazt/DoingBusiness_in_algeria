@@ -1,0 +1,71 @@
+rules_version = '2';
+
+// ════════════════════════════════════════════════════════════════════════
+//  Firestore Security Rules — DoingBusiness in Algeria
+// ════════════════════════════════════════════════════════════════════════
+//  Deploy with:  firebase deploy --only firestore:rules
+//
+//  Data model (inferred from Dart repositories):
+//    Users/{uid}           → user profile (username, email, fcmTokens)
+//    Articles/{articleId}  → public business articles (title, blog, image, pdfLink)
+//    categories/{catId}    → public taxonomy (name, parentId, isFeatured)
+//
+//  Rules philosophy:
+//    - Articles + categories: public READ, admin-only WRITE (write from
+//      console or a trusted backend; clients never write content).
+//    - Users/{uid}: only the authenticated owner can read/write their own doc.
+//    - All other paths: DENY by default.
+// ════════════════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helpers ────────────────────────────────────────────────
+    function isSignedIn()      { return request.auth != null; }
+    function isOwner(uid)      { return isSignedIn() && request.auth.uid == uid; }
+    function isEmailVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    // Admin check: set a custom claim `admin: true` via Firebase Admin SDK
+    function isAdmin()         { return isSignedIn() && request.auth.token.admin == true; }
+
+    // ─── Articles: public read, admin write ─────────────────────
+    match /Articles/{articleId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── Categories: public read, admin write ───────────────────
+    match /categories/{categoryId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── Users: owner-only, with field validation on write ──────
+    match /Users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid)
+                    && request.resource.data.keys().hasOnly(
+                         ['username', 'email', 'fcmTokens', 'fcmTokenUpdatedAt', 'createdAt'])
+                    && request.resource.data.username is string
+                    && request.resource.data.email    is string
+                    && request.resource.data.username.size() >= 2
+                    && request.resource.data.username.size() <= 60;
+
+      allow update: if isOwner(uid)
+                    // Don't let user change their own uid/email from client
+                    && (!('email' in request.resource.data.diff(resource.data).affectedKeys())
+                        || request.resource.data.email == resource.data.email);
+
+      allow delete: if isOwner(uid);
+
+      // Subcollections (future-proof)
+      match /{subpath=**} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // ─── Default deny ───────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

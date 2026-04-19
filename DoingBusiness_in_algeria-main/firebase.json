@@ -1,1 +1,25 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"doingbusinessbygrantthornton","appId":"1:503441830389:android:6f27a2e50f8feb8780f0bc","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"doingbusinessbygrantthornton","configurations":{"android":"1:503441830389:android:6f27a2e50f8feb8780f0bc","ios":"1:503441830389:ios:763ca28ea65e6fd380f0bc","macos":"1:503441830389:ios:763ca28ea65e6fd380f0bc","web":"1:503441830389:web:76987a399e8a8f1780f0bc","windows":"1:503441830389:web:6fdba17e360dc20b80f0bc"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "doingbusinessbygrantthornton",
+          "appId": "1:617006158041:android:CHANGEME",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "doingbusinessbygrantthornton",
+          "appId": "1:617006158041:ios:CHANGEME",
+          "uploadDebugSymbols": true,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      }
+    }
+  }
+}
