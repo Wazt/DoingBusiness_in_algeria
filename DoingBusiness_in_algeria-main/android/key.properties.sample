@@ -1,0 +1,12 @@
+# ⚠️ Copy this file to `android/key.properties` and fill with your real values.
+# ⚠️ NEVER commit the real key.properties file (already in .gitignore below).
+#
+# How to generate a keystore:
+#   keytool -genkey -v -keystore ~/doingbusiness-release.jks \
+#           -keyalg RSA -keysize 2048 -validity 10000 \
+#           -alias doingbusiness
+
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=doingbusiness
+storeFile=/absolute/path/to/doingbusiness-release.jks

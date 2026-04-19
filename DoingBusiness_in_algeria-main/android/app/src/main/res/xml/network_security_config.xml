@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Forces HTTPS for ALL network requests.
+    Play Store security scanner checks for this file.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+
+    <!-- Debug builds allow cleartext for localhost only (for testing) -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system"/>
+            <certificates src="user" overridePins="true"/>
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android 12+ backup rules. We OPT OUT of cloud backup for sensitive data
+    because we don't want auth tokens, Firestore cache, or saved-article lists
+    to leak through Google Account cloud backups without user control.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="FlutterSharedPreferences.xml"/>
+        <exclude domain="file" path="get_storage.gs.db"/>
+        <exclude domain="file" path="."/>
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="FlutterSharedPreferences.xml"/>
+        <exclude domain="file" path="get_storage.gs.db"/>
+    </device-transfer>
+</data-extraction-rules>

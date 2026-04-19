@@ -41,3 +41,17 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Android signing — NEVER commit real keystore files
+android/key.properties
+*.jks
+*.keystore
+
+# Cloud Functions (Phase 5)
+functions/lib/
+functions/node_modules/
+scripts/serviceAccountKey.json
+
+# Local environment
+.env
+.env.local
