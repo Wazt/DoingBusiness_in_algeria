@@ -5,19 +5,13 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
-///
-/// Example:
-/// ```dart
-/// import 'firebase_options.dart';
-/// // ...
-/// await Firebase.initializeApp(
-///   options: DefaultFirebaseOptions.currentPlatform,
-/// );
-/// ```
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -25,9 +19,15 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        return macos;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.windows:
-        return windows;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for windows - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -40,49 +40,20 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCkoED3fZD3rtHLue4DIgGb2CQbSddx5YM',
-    appId: '1:503441830389:web:76987a399e8a8f1780f0bc',
-    messagingSenderId: '503441830389',
-    projectId: 'doingbusinessbygrantthornton',
-    authDomain: 'doingbusinessbygrantthornton.firebaseapp.com',
-    storageBucket: 'doingbusinessbygrantthornton.appspot.com',
-    measurementId: 'G-XCPLS9EDS0',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCJ-Z93bhMVu9GSzHbKGYgoQKRGjdanJw0',
-    appId: '1:503441830389:android:6f27a2e50f8feb8780f0bc',
-    messagingSenderId: '503441830389',
-    projectId: 'doingbusinessbygrantthornton',
-    storageBucket: 'doingbusinessbygrantthornton.appspot.com',
+    apiKey: 'AIzaSyACV_Ju0axcdkftSSQk26AYObcBgqVYz50',
+    appId: '1:572673771369:android:8e6eed34502dd6b7685ff8',
+    messagingSenderId: '572673771369',
+    projectId: 'doingbusinessbygrantthorntondz',
+    storageBucket: 'doingbusinessbygrantthorntondz.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAgNw8YVApdRKUJZM70wpVgexdNNTtIpuE',
-    appId: '1:503441830389:ios:763ca28ea65e6fd380f0bc',
-    messagingSenderId: '503441830389',
-    projectId: 'doingbusinessbygrantthornton',
-    storageBucket: 'doingbusinessbygrantthornton.appspot.com',
+    apiKey: 'AIzaSyCPUAps81yN-N0jJYLxYDMc0p9Uupcfu-8',
+    appId: '1:572673771369:ios:6f7bbac9e7ec542b685ff8',
+    messagingSenderId: '572673771369',
+    projectId: 'doingbusinessbygrantthorntondz',
+    storageBucket: 'doingbusinessbygrantthorntondz.firebasestorage.app',
     iosBundleId: 'com.grantthorntondz.doingbusiness',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAgNw8YVApdRKUJZM70wpVgexdNNTtIpuE',
-    appId: '1:503441830389:ios:763ca28ea65e6fd380f0bc',
-    messagingSenderId: '503441830389',
-    projectId: 'doingbusinessbygrantthornton',
-    storageBucket: 'doingbusinessbygrantthornton.appspot.com',
-    iosBundleId: 'com.grantthorntondz.doingbusiness',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCkoED3fZD3rtHLue4DIgGb2CQbSddx5YM',
-    appId: '1:503441830389:web:6fdba17e360dc20b80f0bc',
-    messagingSenderId: '503441830389',
-    projectId: 'doingbusinessbygrantthornton',
-    authDomain: 'doingbusinessbygrantthornton.firebaseapp.com',
-    storageBucket: 'doingbusinessbygrantthornton.appspot.com',
-    measurementId: 'G-614Q8GKL37',
   );
 }

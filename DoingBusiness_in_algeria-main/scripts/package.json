@@ -9,6 +9,8 @@
     "grant": "node grant-admin.mjs"
   },
   "dependencies": {
+    "axios": "^1.15.2",
+    "cheerio": "^1.2.0",
     "firebase-admin": "^12.5.0"
   }
 }

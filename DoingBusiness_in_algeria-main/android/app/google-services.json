@@ -1,26 +1,36 @@
 {
   "project_info": {
-    "project_number": "503441830389",
-    "project_id": "doingbusinessbygrantthornton",
-    "storage_bucket": "doingbusinessbygrantthornton.appspot.com"
+    "project_number": "572673771369",
+    "project_id": "doingbusinessbygrantthorntondz",
+    "storage_bucket": "doingbusinessbygrantthorntondz.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:503441830389:android:6f27a2e50f8feb8780f0bc",
+        "mobilesdk_app_id": "1:572673771369:android:8e6eed34502dd6b7685ff8",
         "android_client_info": {
           "package_name": "com.grantthorntondz.doingbusiness"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "572673771369-ncq9ilje7bmjfua2uimib5q61ocnfegb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyCJ-Z93bhMVu9GSzHbKGYgoQKRGjdanJw0"
+          "current_key": "AIzaSyACV_Ju0axcdkftSSQk26AYObcBgqVYz50"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "572673771369-ncq9ilje7bmjfua2uimib5q61ocnfegb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
