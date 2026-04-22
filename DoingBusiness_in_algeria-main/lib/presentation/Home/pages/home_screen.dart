@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doingbusiness/core/configs/theme/app_colors.dart';
 import 'package:doingbusiness/core/configs/theme/app_spacing.dart';
@@ -106,42 +107,147 @@ class _Wordmark extends StatelessWidget {
   const _Wordmark();
   @override
   Widget build(BuildContext context) {
-    return RichText(
-      text: const TextSpan(
-        children: [
-          TextSpan(
-            text: 'Doing',
-            style: TextStyle(
-              fontFamily: 'Playfair Display',
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: AppColors.brandPurpleDark,
-              letterSpacing: -0.4,
-            ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        RichText(
+          text: const TextSpan(
+            children: [
+              TextSpan(
+                text: 'Doing',
+                style: TextStyle(
+                  fontFamily: 'Playfair Display',
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.brandPurpleDark,
+                  letterSpacing: -0.4,
+                ),
+              ),
+              TextSpan(
+                text: '.',
+                style: TextStyle(
+                  fontFamily: 'Playfair Display',
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.brandCoral,
+                ),
+              ),
+              TextSpan(
+                text: 'Business',
+                style: TextStyle(
+                  fontFamily: 'Playfair Display',
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.brandPurpleDark,
+                  letterSpacing: -0.4,
+                ),
+              ),
+              TextSpan(
+                text: ' In Algeria',
+                style: TextStyle(
+                  fontFamily: 'Playfair Display',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.lightTextSecondary,
+                  letterSpacing: -0.1,
+                ),
+              ),
+            ],
           ),
-          TextSpan(
-            text: '.',
-            style: TextStyle(
-              fontFamily: 'Playfair Display',
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: AppColors.brandCoral,
-            ),
-          ),
-          TextSpan(
-            text: 'Business',
-            style: TextStyle(
-              fontFamily: 'Playfair Display',
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: AppColors.brandPurpleDark,
-              letterSpacing: -0.4,
-            ),
+        ),
+        const SizedBox(width: 6),
+        const _AlgeriaFlagPin(),
+      ],
+    );
+  }
+}
+
+/// Small rounded "pin" with the Algeria flag (green / white split + red
+/// crescent & star). Drawn with CustomPaint so it stays crisp at any DPI
+/// and doesn't depend on emoji font rendering.
+class _AlgeriaFlagPin extends StatelessWidget {
+  const _AlgeriaFlagPin({this.size = 20});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(size * 0.2),
+        border: Border.all(color: AppColors.lightBorder, width: 0.6),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 3,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
+      clipBehavior: Clip.antiAlias,
+      child: CustomPaint(
+        painter: _AlgeriaFlagPainter(),
+        size: Size.square(size),
+      ),
     );
   }
+}
+
+class _AlgeriaFlagPainter extends CustomPainter {
+  static const _green = Color(0xFF006233);
+  static const _red = Color(0xFFD21034);
+  static const _white = Color(0xFFFFFFFF);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final half = size.width / 2;
+    // Green half (left)
+    final greenPaint = Paint()..color = _green;
+    canvas.drawRect(Rect.fromLTWH(0, 0, half, size.height), greenPaint);
+    // White half (right)
+    final whitePaint = Paint()..color = _white;
+    canvas.drawRect(Rect.fromLTWH(half, 0, half, size.height), whitePaint);
+
+    // Red crescent + star, centered at the split
+    final cx = size.width * 0.5;
+    final cy = size.height * 0.5;
+    final r = size.width * 0.18;
+    final redPaint = Paint()..color = _red..style = PaintingStyle.fill;
+
+    // Crescent = outer filled circle minus an offset white circle
+    canvas.save();
+    canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    canvas.drawCircle(Offset(cx, cy), r, redPaint);
+    canvas.drawCircle(Offset(cx + r * 0.25, cy), r * 0.85, Paint()..color = _white);
+    canvas.restore();
+
+    // 5-point star to the right of the crescent
+    final starCx = cx + r * 0.95;
+    final starR = r * 0.55;
+    final path = Path();
+    for (int i = 0; i < 5; i++) {
+      final outerAngle = -math.pi / 2 + i * 2 * math.pi / 5;
+      final innerAngle = outerAngle + math.pi / 5;
+      final ox = starCx + starR * math.cos(outerAngle);
+      final oy = cy + starR * math.sin(outerAngle);
+      final ix = starCx + starR * 0.4 * math.cos(innerAngle);
+      final iy = cy + starR * 0.4 * math.sin(innerAngle);
+      if (i == 0) {
+        path.moveTo(ox, oy);
+      } else {
+        path.lineTo(ox, oy);
+      }
+      path.lineTo(ix, iy);
+    }
+    path.close();
+    canvas.drawPath(path, redPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ───────────────────────── Hero ─────────────────────────
