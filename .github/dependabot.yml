@@ -1,0 +1,54 @@
+# Dependabot keeps dependencies current + flags CVEs with weekly PRs.
+# Installed in response to audit_security_deep_dive.html §05 MEDIUM
+# "No automated dependency scanning tool".
+
+version: 2
+updates:
+  # Flutter / Dart
+  - package-ecosystem: "pub"
+    directory: "/DoingBusiness_in_algeria-main"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # Cloud Functions (Node/TS)
+  - package-ecosystem: "npm"
+    directory: "/DoingBusiness_in_algeria-main/functions"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(functions)"
+      include: "scope"
+
+  # Admin helper scripts
+  - package-ecosystem: "npm"
+    directory: "/DoingBusiness_in_algeria-main/scripts"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(scripts)"
+      include: "scope"
+
+  # Android toolchain
+  - package-ecosystem: "gradle"
+    directory: "/DoingBusiness_in_algeria-main/android"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(android)"
+      include: "scope"
+
+  # GitHub Actions workflows themselves
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3

@@ -1,3 +1,4 @@
+import 'package:doingbusiness/utils/error_mapper.dart';
 import 'package:doingbusiness/data/repository/user_repository.dart';
 import 'package:doingbusiness/presentation/auth/controllers/authentication_repository.dart';
 import 'package:doingbusiness/presentation/auth/controllers/user_controller.dart';
@@ -87,7 +88,7 @@ class SignUpController extends GetxController {
       Get.to(() => EmailVerificationScreen(email: email.text.trim()));
     } catch (e) {
       FullScreenLoader.stopLoading();
-      Loaders.errorSnackBar(title: 'Sign up failed', message: e.toString());
+      Loaders.errorSnackBar(title: 'Sign up failed', message: ErrorMapper.toUserMessage(e));
     }
   }
 

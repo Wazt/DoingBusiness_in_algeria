@@ -23,16 +23,35 @@ class OpenInLinkedInButton extends StatelessWidget {
   });
 
   Future<void> _open(BuildContext context) async {
-    final uri = Uri.parse(url);
+    // Defense-in-depth: even though the Firestore rules enforce
+    // linkedinUrl to match ^https://(www\.)?linkedin\.com/.*, re-validate
+    // here so a single lax rule or a compromised admin write can't trigger
+    // a deep-link into arbitrary schemes (intent://..., fb://..., etc.).
+    // See audit_security_deep_dive.html §07 LOW "launchUrl() without scheme whitelist".
+    final Uri uri;
+    try {
+      uri = Uri.parse(url);
+    } on FormatException {
+      _showError(context, 'Invalid URL.');
+      return;
+    }
+    if (uri.scheme != 'https' || !uri.host.endsWith('linkedin.com')) {
+      _showError(context, 'Refusing to open a non-LinkedIn URL.');
+      return;
+    }
+
     final launched = await launchUrl(
       uri,
       mode: LaunchMode.externalApplication, // prefer native app
     );
     if (!launched && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open LinkedIn.')),
-      );
+      _showError(context, 'Could not open LinkedIn.');
     }
+  }
+
+  void _showError(BuildContext context, String msg) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override

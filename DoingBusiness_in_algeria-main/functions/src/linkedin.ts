@@ -53,9 +53,12 @@ const db = admin.firestore();
 const LINKEDIN_URL_REGEX =
   /^https:\/\/(www\.)?linkedin\.com\/(posts\/[^\s?#]+|pulse\/[^\s?#]+|feed\/update\/[^\s?#]+)/;
 
+// Identifiable User-Agent — the "public OG tags" approach in the CHANGELOG is
+// legally coherent only if we don't impersonate a browser. If LinkedIn chooses
+// to block this UA one day, we'll learn about it and can evolve the strategy
+// (official API, partnership) rather than silently bypassing their detection.
 const USER_AGENT =
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ' +
-  '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+  'DoingBusinessBot/1.0 (+https://doingbusiness.grantthornton.dz)';
 
 const MAX_TITLE_LEN = 200;
 const MAX_DESCRIPTION_LEN = 5000;
@@ -118,27 +121,61 @@ function assertLinkedInUrl(url: unknown): asserts url is string {
 }
 
 async function fetchLinkedInPreview(url: string): Promise<PreviewResult> {
-  let html: string;
+  // SSRF hardening: manually follow up to 3 redirects and re-validate every
+  // hop against LINKEDIN_URL_REGEX. Using axios' built-in `maxRedirects` would
+  // follow the Location header anywhere — including `169.254.169.254/computeMetadata`
+  // (GCP metadata service), `localhost:*`, or arbitrary 3rd parties.
+  const MAX_HOPS = 3;
+  let currentUrl = url;
+  let html: string | null = null;
 
-  try {
-    const response = await axios.get<string>(url, {
-      headers: {
-        'User-Agent': USER_AGENT,
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9',
-        'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8',
-        'Cache-Control': 'no-cache',
-      },
-      timeout: FETCH_TIMEOUT_MS,
-      maxContentLength: MAX_CONTENT_LENGTH,
-      maxRedirects: 3,
-      validateStatus: (status) => status < 400,
-    });
+  for (let hop = 0; hop <= MAX_HOPS; hop++) {
+    if (!LINKEDIN_URL_REGEX.test(currentUrl)) {
+      throw new HttpsError(
+        'invalid-argument',
+        'Redirect target is not a LinkedIn URL — refusing to follow for SSRF safety.'
+      );
+    }
+
+    let response;
+    try {
+      response = await axios.get<string>(currentUrl, {
+        headers: {
+          'User-Agent': USER_AGENT,
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9',
+          'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8',
+          'Cache-Control': 'no-cache',
+        },
+        timeout: FETCH_TIMEOUT_MS,
+        maxContentLength: MAX_CONTENT_LENGTH,
+        maxRedirects: 0,                       // we handle them ourselves
+        validateStatus: (status) => status < 400 || (status >= 300 && status < 400),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      throw new HttpsError(
+        'unavailable',
+        `Could not fetch the LinkedIn page. It may be private, deleted, or blocked. (${message})`
+      );
+    }
+
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers['location'];
+      if (!location) {
+        throw new HttpsError('unavailable', 'LinkedIn returned a redirect without a Location header.');
+      }
+      currentUrl = new URL(location, currentUrl).toString();
+      continue;
+    }
+
     html = response.data;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'unknown error';
+    break;
+  }
+
+  if (html === null) {
     throw new HttpsError(
       'unavailable',
-      `Could not fetch the LinkedIn page. It may be private, deleted, or blocked. (${message})`
+      `LinkedIn sent too many redirects (>${MAX_HOPS}). Refusing for SSRF safety.`
     );
   }
 
@@ -172,7 +209,7 @@ function sanitizeText(input: string | undefined, maxLen: number): string {
 // ───────────────────────────────────────────────────────────────────────
 
 export const previewLinkedInArticle = onCall<PreviewRequest, Promise<PreviewResult>>(
-  { enforceAppCheck: false /* set true after App Check is wired */, cors: true },
+  { enforceAppCheck: true, cors: true },
   async (request) => {
     assertAdmin(request);
     assertLinkedInUrl(request.data.url);
@@ -187,7 +224,7 @@ export const previewLinkedInArticle = onCall<PreviewRequest, Promise<PreviewResu
 // ───────────────────────────────────────────────────────────────────────
 
 export const createLinkedInArticle = onCall<CreateRequest, Promise<{ articleId: string }>>(
-  { enforceAppCheck: false /* set true after App Check is wired */, cors: true },
+  { enforceAppCheck: true, cors: true },
   async (request) => {
     assertAdmin(request);
     assertLinkedInUrl(request.data.url);

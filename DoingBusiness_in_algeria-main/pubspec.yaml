@@ -55,6 +55,12 @@ dependencies:
   cloud_functions: ^5.1.3
   url_launcher: ^6.3.1
   video_player: ^2.9.2
+  # Phase 8 — security hardening:
+  # App Check attests that requests come from an official, unmodified app binary
+  # (Play Integrity on Android, DeviceCheck/App Attest on iOS). Crashlytics
+  # captures unhandled errors without leaking them in the UI.
+  firebase_app_check: ^0.3.1
+  firebase_crashlytics: ^4.1.3
 
 
 dev_dependencies:

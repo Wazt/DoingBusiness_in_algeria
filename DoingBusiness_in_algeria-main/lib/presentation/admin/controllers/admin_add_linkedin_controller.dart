@@ -1,3 +1,4 @@
+import 'package:doingbusiness/utils/error_mapper.dart';
 import 'package:doingbusiness/data/repository/admin_repository.dart';
 import 'package:doingbusiness/presentation/Article/controllers/article_controller.dart';
 import 'package:doingbusiness/utils/loaders/loaders.dart';
@@ -79,7 +80,7 @@ class AdminAddLinkedInController extends GetxController {
 
       step.value = AdminAddStep.reviewAndPublish;
     } catch (e) {
-      Loaders.errorSnackBar(title: 'Could not fetch preview', message: e.toString());
+      Loaders.errorSnackBar(title: 'Could not fetch preview', message: ErrorMapper.toUserMessage(e));
     } finally {
       isLoadingPreview.value = false;
     }
@@ -112,7 +113,7 @@ class AdminAddLinkedInController extends GetxController {
       _reset();
       Get.back<String>(result: articleId);
     } catch (e) {
-      Loaders.errorSnackBar(title: 'Could not publish', message: e.toString());
+      Loaders.errorSnackBar(title: 'Could not publish', message: ErrorMapper.toUserMessage(e));
     } finally {
       isPublishing.value = false;
     }

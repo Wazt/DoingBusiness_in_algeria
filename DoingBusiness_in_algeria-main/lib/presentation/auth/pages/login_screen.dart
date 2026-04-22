@@ -137,19 +137,25 @@ class LoginScreen extends StatelessWidget {
                   const SizedBox(height: AppSpacing.xl),
 
                   // ─── Submit button ───────────────────────────
-                  Obx(() => ElevatedButton(
-                        onPressed: controller.isLoading.value ? null : controller.signIn,
-                        child: controller.isLoading.value
-                            ? const SizedBox(
-                                height: 22,
-                                width: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.4,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text('Sign In'),
-                      )),
+                  Obx(() {
+                    final loading = controller.isLoading.value;
+                    final locked = controller.isLockedOut;
+                    return ElevatedButton(
+                      onPressed: (loading || locked) ? null : controller.signIn,
+                      child: loading
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.4,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(locked
+                              ? 'Try again in ${controller.lockoutSeconds.value}s'
+                              : 'Sign In'),
+                    );
+                  }),
 
                   const Spacer(),
 
