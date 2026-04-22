@@ -1,3 +1,4 @@
+import 'package:doingbusiness/utils/error_mapper.dart';
 import 'package:doingbusiness/core/configs/theme/app_colors.dart';
 import 'package:doingbusiness/presentation/auth/controllers/authentication_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -95,7 +96,7 @@ class DeleteUserAccount extends StatelessWidget {
     try {
       await AuthenticationRepository.instance.deleteUserAccount(email, password);
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      Get.snackbar('Error', ErrorMapper.toUserMessage(e));
     }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:doingbusiness/utils/error_mapper.dart';
 import 'dart:async';
 import 'package:doingbusiness/presentation/auth/controllers/authentication_repository.dart';
 import 'package:doingbusiness/utils/loaders/loaders.dart';
@@ -56,7 +57,7 @@ class EmailVerificationController extends GetxController {
       _startCooldownTicker();
       Loaders.successSnackBar(title: 'Email sent', message: 'Check your inbox.');
     } catch (e) {
-      Loaders.errorSnackBar(title: 'Could not send email', message: e.toString());
+      Loaders.errorSnackBar(title: 'Could not send email', message: ErrorMapper.toUserMessage(e));
     } finally {
       isResending.value = false;
     }

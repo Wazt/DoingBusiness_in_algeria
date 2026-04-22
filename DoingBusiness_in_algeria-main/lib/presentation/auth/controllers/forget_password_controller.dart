@@ -1,3 +1,4 @@
+import 'package:doingbusiness/utils/error_mapper.dart';
 import 'package:doingbusiness/presentation/Profile/pages/email_sent.dart';
 import 'package:doingbusiness/presentation/auth/controllers/authentication_repository.dart';
 import 'package:doingbusiness/utils/Network/network_manager.dart';
@@ -42,7 +43,7 @@ class ForgetPasswordController extends GetxController {
       ));
     } catch (e) {
       FullScreenLoader.stopLoading();
-      Loaders.errorSnackBar(title: 'oh Snap', message: e.toString());
+      Loaders.errorSnackBar(title: 'oh Snap', message: ErrorMapper.toUserMessage(e));
     }
   }
 
@@ -65,7 +66,7 @@ class ForgetPasswordController extends GetxController {
           message: 'Email link Sent to Reset your password');
     } catch (e) {
       FullScreenLoader.stopLoading();
-      Loaders.errorSnackBar(title: 'oh Snap', message: e.toString());
+      Loaders.errorSnackBar(title: 'oh Snap', message: ErrorMapper.toUserMessage(e));
     }
   }
 }

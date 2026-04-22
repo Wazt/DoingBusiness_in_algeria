@@ -1,3 +1,4 @@
+import 'package:doingbusiness/utils/error_mapper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:doingbusiness/data/repository/article_repository.dart';
 import 'package:doingbusiness/data/models/article_model.dart';
@@ -62,7 +63,7 @@ class ArticleController extends GetxController {
       featuredArticles.assignAll(articles);
       filteredArticles.assignAll(articles);
     } catch (e) {
-      Loaders.errorSnackBar(title: 'Could not load articles', message: e.toString());
+      Loaders.errorSnackBar(title: 'Could not load articles', message: ErrorMapper.toUserMessage(e));
     } finally {
       isLoading.value = false;
     }
