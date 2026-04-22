@@ -17,38 +17,98 @@ import 'package:shimmer/shimmer.dart';
 /// Articles render with a small source tag — GT Editorial (coral) vs
 /// LinkedIn (blue with "in" mark). LinkedIn-mirrored articles also get a
 /// blue "in" badge overlaid on the thumbnail.
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final articleController = Get.put(ArticleController());
-    final categoryController = Get.put(CategoryController());
-    final userController = Get.put(UserController());
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
+class _HomeScreenState extends State<HomeScreen> {
+  final _scrollController = ScrollController();
+  late final ArticleController _articleController;
+  late final CategoryController _categoryController;
+  late final UserController _userController;
+
+  @override
+  void initState() {
+    super.initState();
+    _articleController = Get.put(ArticleController());
+    _categoryController = Get.put(CategoryController());
+    _userController = Get.put(UserController());
+    _scrollController.addListener(_maybeLoadMore);
+  }
+
+  void _maybeLoadMore() {
+    // Trigger the next page when the user is within 600px of the bottom.
+    final pos = _scrollController.position;
+    if (pos.pixels >= pos.maxScrollExtent - 600) {
+      _articleController.loadMore();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_maybeLoadMore);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.lightBg,
       body: RefreshIndicator(
         color: AppColors.brandPurple,
-        onRefresh: () async {
-          await articleController.fetchFeaturedArticles();
-        },
+        onRefresh: () => _articleController.fetchFeaturedArticles(),
         child: CustomScrollView(
+          controller: _scrollController,
           slivers: [
-            _HomeAppBar(userController: userController),
-            _HeroSection(articleController: articleController),
+            _HomeAppBar(userController: _userController),
+            _HeroSection(articleController: _articleController),
             _FilterChipsSliver(
-              articleController: articleController,
-              categoryController: categoryController,
+              articleController: _articleController,
+              categoryController: _categoryController,
             ),
-            _LatestHeader(articleController: articleController),
-            _LatestList(articleController: articleController),
+            _LatestHeader(articleController: _articleController),
+            _LatestList(articleController: _articleController),
+            _LoadMoreIndicator(articleController: _articleController),
             const SliverToBoxAdapter(
               child: SizedBox(height: AppSpacing.huge),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Shows a small spinner at the bottom of the feed while the next page
+/// is being fetched, then collapses when there are no more pages.
+class _LoadMoreIndicator extends StatelessWidget {
+  const _LoadMoreIndicator({required this.articleController});
+  final ArticleController articleController;
+  @override
+  Widget build(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Obx(() {
+        if (!articleController.isLoadingMore.value) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+          child: Center(
+            child: SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.4,
+                color: AppColors.brandPurple,
+              ),
+            ),
+          ),
+        );
+      }),
     );
   }
 }

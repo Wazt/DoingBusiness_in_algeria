@@ -17,6 +17,7 @@
     "logs": "firebase functions:log"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
     "axios": "^1.7.7",
     "cheerio": "^1.0.0",
     "firebase-admin": "^12.6.0",

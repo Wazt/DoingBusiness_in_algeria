@@ -10,3 +10,5 @@ export {
   createLinkedInArticle,
   // refreshLinkedInThumbnails,  // enable if you need thumbnail refresh
 } from './linkedin';
+
+export { askGtAssistant } from './chatbot';
