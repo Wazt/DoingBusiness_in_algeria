@@ -50,8 +50,14 @@ const db = admin.firestore();
 //  Constants
 // ───────────────────────────────────────────────────────────────────────
 
+// Tightened — each variant matches the actual structure LinkedIn uses
+// for GT Algeria posts (validated 2026-04-22). The 19-digit activity id
+// is the canonical numeric suffix; the slug prefix is free-form text but
+// restricted to URL-safe characters to close off path-traversal-style
+// payloads. Defense-in-depth: the SSRF guard + OG-tag parser already
+// neutralise arbitrary paths, but a tighter whitelist keeps us honest.
 const LINKEDIN_URL_REGEX =
-  /^https:\/\/(www\.)?linkedin\.com\/(posts\/[^\s?#]+|pulse\/[^\s?#]+|feed\/update\/[^\s?#]+)/;
+  /^https:\/\/(www\.)?linkedin\.com\/(posts\/[A-Za-z0-9%_-]+-activity-\d{19}[A-Za-z0-9_-]*|pulse\/[A-Za-z0-9%_-]+|feed\/update\/urn(?::|%3A)li(?::|%3A)activity(?::|%3A)\d{19})(\/|\?[^\s]*)?$/;
 
 // Identifiable User-Agent — the "public OG tags" approach in the CHANGELOG is
 // legally coherent only if we don't impersonate a browser. If LinkedIn chooses

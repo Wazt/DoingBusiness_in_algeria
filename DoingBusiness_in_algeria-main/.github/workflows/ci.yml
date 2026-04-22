@@ -56,8 +56,8 @@ jobs:
           cache: "npm"
           cache-dependency-path: DoingBusiness_in_algeria-main/functions/package-lock.json
       - run: npm ci
-      - name: npm audit (high + critical)
-        run: npm audit --audit-level=high
+      - name: npm audit (moderate+)
+        run: npm audit --audit-level=moderate
       - name: TypeScript build
         run: npm run build
 

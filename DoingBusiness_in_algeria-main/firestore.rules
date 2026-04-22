@@ -13,6 +13,16 @@ service cloud.firestore {
     function isOwner(uid)      { return isSignedIn() && request.auth.uid == uid; }
     function isAdmin()         { return isSignedIn() && request.auth.token.admin == true; }
 
+    // Referential integrity: reject article payloads whose `category`
+    // doesn't exist in /categories. Empty category is allowed (uncategorised
+    // LinkedIn mirrors / pre-seed editorial).
+    function validCategoryRef(data) {
+      return !('category' in data)
+          || !(data.category is string)
+          || data.category == ''
+          || exists(/databases/$(database)/documents/categories/$(data.category));
+    }
+
     function isValidEditorialArticle(data) {
       return data.keys().hasAll(['titre', 'blog', 'image', 'category'])
           && data.titre is string
@@ -43,14 +53,18 @@ service cloud.firestore {
     match /Articles/{articleId} {
       allow read: if true;
 
-      // Editorial articles: admins only, schema validated
+      // Editorial articles: admins only, schema validated, category must
+      // exist in /categories (or be empty).
       allow create: if isAdmin()
+                    && validCategoryRef(request.resource.data)
                     && (isValidEditorialArticle(request.resource.data)
                         || isValidLinkedInArticle(request.resource.data));
 
       // Updates: admins only. Cannot change source or linkedinUrl once set
       // (prevents shenanigans like turning an editorial article into a fake LinkedIn one).
+      // Category must still resolve to a real /categories doc.
       allow update: if isAdmin()
+                    && validCategoryRef(request.resource.data)
                     && (resource.data.get('source', 'editorial')
                         == request.resource.data.get('source', 'editorial'))
                     && (resource.data.get('linkedinUrl', '')
