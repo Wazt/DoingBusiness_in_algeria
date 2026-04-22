@@ -1,6 +1,7 @@
-import 'package:doingbusiness/utils/error_mapper.dart';
 import 'dart:async';
+import 'dart:math';
 import 'package:doingbusiness/presentation/auth/controllers/authentication_repository.dart';
+import 'package:doingbusiness/utils/error_mapper.dart';
 import 'package:doingbusiness/utils/loaders/loaders.dart';
 import 'package:doingbusiness/utils/pages/success_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -63,20 +64,43 @@ class EmailVerificationController extends GetxController {
     }
   }
 
+  /// Polls with exponential-ish backoff (3 → 5 → 8 → 10 s, capped) and
+  /// ±400 ms jitter on each tick to avoid thundering herd when many
+  /// clients hit the "verify" screen at the same second boundary.
+  /// Auto-stops after 10 minutes.
+  int _pollAttempt = 0;
+  final Random _rng = Random();
+
   void _startPolling() {
-    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
-      await FirebaseAuth.instance.currentUser?.reload();
-      final user = FirebaseAuth.instance.currentUser;
-      if (user?.emailVerified ?? false) {
-        _pollingTimer?.cancel();
-        _autoStopTimer?.cancel();
-        Get.off(() => const SuccessScreen());
-      }
-    });
+    _scheduleNextPoll();
 
     // Auto-stop after 10 minutes to save battery / quota
     _autoStopTimer = Timer(const Duration(minutes: 10), () {
       _pollingTimer?.cancel();
+    });
+  }
+
+  void _scheduleNextPoll() {
+    // Backoff tiers in seconds: 3, 5, 8, 10 (clamped).
+    const tiers = [3, 5, 8, 10];
+    final base = tiers[_pollAttempt.clamp(0, tiers.length - 1)];
+    final jitterMs = _rng.nextInt(800) - 400; // ±400ms
+    final delay = Duration(milliseconds: base * 1000 + jitterMs);
+    _pollingTimer = Timer(delay, () async {
+      _pollAttempt++;
+      try {
+        await FirebaseAuth.instance.currentUser?.reload();
+        final user = FirebaseAuth.instance.currentUser;
+        if (user?.emailVerified ?? false) {
+          _pollingTimer?.cancel();
+          _autoStopTimer?.cancel();
+          Get.off(() => const SuccessScreen());
+          return;
+        }
+      } catch (_) {
+        // Transient network issue — next tick will retry.
+      }
+      _scheduleNextPoll();
     });
   }
 

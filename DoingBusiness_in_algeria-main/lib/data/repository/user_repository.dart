@@ -13,9 +13,9 @@ class UserRepository extends GetxController {
     try {
       await _db.collection("Users").doc(user.id).set(user.toJson());
     } on FirebaseException catch (e) {
-      throw e.code;
+      throw Exception(e.message ?? e.code);
     } catch (e) {
-      throw 'Somethiing went wrong';
+      throw Exception('Something went wrong while saving the user record.');
     }
   }
 
@@ -31,9 +31,9 @@ class UserRepository extends GetxController {
         return UserModel.empty();
       }
     } on FirebaseException catch (e) {
-      throw e.message.toString();
+      throw Exception(e.message ?? e.code);
     } catch (e) {
-      throw 'unkonw error';
+      throw Exception('Unknown error while fetching user details.');
     }
   }
 
@@ -44,9 +44,9 @@ class UserRepository extends GetxController {
           .doc(updatedUser.id)
           .update(updatedUser.toJson());
     } on FirebaseException catch (e) {
-      throw e.message.toString();
+      throw Exception(e.message ?? e.code);
     } catch (e) {
-      throw 'Unknown error';
+      throw Exception('Unknown error while updating user details.');
     }
   }
 
@@ -57,9 +57,9 @@ class UserRepository extends GetxController {
           .doc(AuthenticationRepository.instance.authUser?.uid)
           .update(json);
     } on FirebaseException catch (e) {
-      throw e.message.toString();
+      throw Exception(e.message ?? e.code);
     } catch (e) {
-      throw 'Unknown error has occured';
+      throw Exception('Unknown error while updating user field.');
     }
   }
 
@@ -67,9 +67,9 @@ class UserRepository extends GetxController {
     try {
       await _db.collection("Users").doc(userId).delete();
     } on FirebaseException catch (e) {
-      throw e.message.toString();
+      throw Exception(e.message ?? e.code);
     } catch (e) {
-      throw 'Unknown error has occured';
+      throw Exception('Unknown error while removing user record.');
     }
   }
 

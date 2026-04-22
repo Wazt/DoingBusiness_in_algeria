@@ -1,10 +1,15 @@
-import 'package:doingbusiness/utils/error_mapper.dart';
 import 'package:doingbusiness/core/configs/theme/app_colors.dart';
 import 'package:doingbusiness/presentation/auth/controllers/authentication_repository.dart';
+import 'package:doingbusiness/utils/error_mapper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+/// Delete-account screen.
+/// Flow: intro → "Proceed" button → confirmation dialog → password prompt →
+/// loading → deleteUserAccount() → returns to intro via AuthenticationRepository.
+/// GDPR Article 17 compliant — Firebase Auth + Firestore /Users/{uid} doc
+/// deletion are both performed by deleteUserAccount() in a single transaction.
 class DeleteUserAccount extends StatelessWidget {
   DeleteUserAccount({super.key});
 
@@ -28,9 +33,11 @@ class DeleteUserAccount extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               const Text(
-                "If you’re facing any issues with the app, we’d love to hear your feedback. Let us know what’s bothering you, and we’ll work on improving your experience!",
+                "This is permanent. Your profile, saved articles, and "
+                "notification preferences will be erased. We'll ask for your "
+                "password to confirm it's really you.",
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.w500,
                   color: Colors.grey,
                 ),
@@ -65,6 +72,31 @@ class DeleteUserAccount extends StatelessWidget {
   }
 
   Future<void> _confirmAndDelete(BuildContext context) async {
+    // Step 1 — are you sure?
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete your account?'),
+        content: const Text(
+          'This is permanent. All your data will be erased and cannot be '
+          'recovered.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.dangerRed),
+            child: const Text('Yes, delete'),
+          ),
+        ],
+      ),
+    );
+    if (sure != true) return;
+
+    // Step 2 — password prompt (reauth requirement).
     final password = await showDialog<String>(
       context: context,
       builder: (ctx) {
@@ -76,6 +108,7 @@ class DeleteUserAccount extends StatelessWidget {
             obscureText: true,
             autofocus: true,
             decoration: const InputDecoration(hintText: 'Password'),
+            onSubmitted: (v) => Navigator.pop(ctx, v),
           ),
           actions: [
             TextButton(
@@ -84,6 +117,7 @@ class DeleteUserAccount extends StatelessWidget {
             ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, controller.text),
+              style: TextButton.styleFrom(foregroundColor: AppColors.dangerRed),
               child: const Text('Delete account'),
             ),
           ],
@@ -92,11 +126,28 @@ class DeleteUserAccount extends StatelessWidget {
     );
     if (password == null || password.isEmpty) return;
 
+    // Step 3 — spinner + actual deletion.
+    // Use Get.dialog so we can dismiss from the same context after the call.
+    Get.dialog(
+      const Center(child: CircularProgressIndicator()),
+      barrierDismissible: false,
+    );
+
     final email = FirebaseAuth.instance.currentUser?.email ?? '';
     try {
       await AuthenticationRepository.instance.deleteUserAccount(email, password);
+      // deleteUserAccount() navigates to GetStartedPage; no need to pop
+      // the spinner — GetX destroys the route stack.
     } catch (e) {
-      Get.snackbar('Error', ErrorMapper.toUserMessage(e));
+      // Dismiss spinner if still open.
+      if (Get.isDialogOpen ?? false) Get.back();
+      Get.snackbar(
+        'Delete failed',
+        ErrorMapper.toUserMessage(e),
+        backgroundColor: AppColors.dangerRed.withOpacity(0.15),
+        colorText: AppColors.dangerRed,
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
 }

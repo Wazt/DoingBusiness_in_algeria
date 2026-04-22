@@ -7,15 +7,17 @@ class CategoryRepository extends GetxController {
 
   final _db = FirebaseFirestore.instance;
 
-  //get all categories
+  /// Fetch all categories.
   Future<List<CategorieModel>> fetchAllCategories() async {
     try {
-      final snapshot = await _db.collection("categories").get();
-      final list =
-          snapshot.docs.map((e) => CategorieModel.fromSnapshot(e)).toList();
-      return list;
+      final snapshot = await _db.collection('categories').get();
+      return snapshot.docs
+          .map((e) => CategorieModel.fromSnapshot(e))
+          .toList();
+    } on FirebaseException catch (e) {
+      throw Exception(e.message ?? e.code);
     } catch (e) {
-      throw "something went south";
+      throw Exception('Unknown error while fetching categories.');
     }
   }
 }

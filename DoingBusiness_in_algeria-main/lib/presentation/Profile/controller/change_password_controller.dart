@@ -1,6 +1,7 @@
 import 'package:doingbusiness/presentation/auth/controllers/authentication_repository.dart';
 import 'package:doingbusiness/utils/Network/network_manager.dart';
 import 'package:doingbusiness/utils/animations/full_screen_loader.dart';
+import 'package:doingbusiness/utils/error_mapper.dart';
 import 'package:doingbusiness/utils/loaders/loaders.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -84,7 +85,7 @@ class ChangePasswordController extends GetxController {
       Get.back();
     } catch (e) {
       FullScreenLoader.stopLoading();
-      Loaders.errorSnackBar(title: 'Could not update', message: e.toString());
+      Loaders.errorSnackBar(title: 'Could not update', message: ErrorMapper.toUserMessage(e));
     }
   }
 
