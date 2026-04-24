@@ -66,9 +66,11 @@ class FieldsValidators {
 
   /// Tiny deny-list — keep short, NIST recommends backing this with a
   /// real breached-password service (HaveIBeenPwned) if you go further.
+  /// Covers the most common leetspeak + punctuation variants too.
   static const _commonWeakPasswords = <String>{
-    'password', 'password1', 'password123', '12345678', '123456789',
-    'qwerty123', 'abc12345', 'iloveyou', 'admin123', 'welcome1',
-    'letmein1', 'sunshine', 'password!', 'p@ssw0rd', 'p@ssword1',
+    'password', 'password1', 'password123', 'password123!', 'password!',
+    '12345678', '123456789', 'qwerty123', 'abc12345',
+    'iloveyou', 'admin123', 'welcome1', 'welcome123',
+    'letmein1', 'sunshine', 'p@ssw0rd', 'p@ssw0rd1', 'p@ssword1',
   };
 }

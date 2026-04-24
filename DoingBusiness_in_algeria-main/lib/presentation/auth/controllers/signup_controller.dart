@@ -1,5 +1,4 @@
 import 'package:doingbusiness/utils/error_mapper.dart';
-import 'package:doingbusiness/data/repository/user_repository.dart';
 import 'package:doingbusiness/presentation/auth/controllers/authentication_repository.dart';
 import 'package:doingbusiness/presentation/auth/controllers/user_controller.dart';
 import 'package:doingbusiness/presentation/auth/pages/email_verification.dart';

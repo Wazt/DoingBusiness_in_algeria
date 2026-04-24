@@ -34,10 +34,9 @@ jobs:
           restore-keys: ${{ runner.os }}-pub-
 
       - run: flutter pub get
-      # dart format check is lenient (warn-only) — CRLF on Windows editors
-      # flags spurious diffs. Re-enable once the team agrees on line endings.
-      - run: flutter analyze --fatal-infos --fatal-warnings || true
-      - run: flutter test --reporter expanded || true
+      # dart format check stays off until the team settles on CRLF/LF.
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test --reporter expanded
 
   functions-audit:
     # Fails the build if any HIGH/CRITICAL CVE is open against the Cloud

@@ -1,6 +1,5 @@
 import 'package:doingbusiness/presentation/Article/controllers/article_controller.dart';
 import 'package:doingbusiness/data/models/article_model.dart';
-import 'package:doingbusiness/presentation/saved/controllers/saved_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

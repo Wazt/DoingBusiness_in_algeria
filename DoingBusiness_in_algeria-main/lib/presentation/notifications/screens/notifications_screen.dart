@@ -1,47 +1,37 @@
-import 'package:doingbusiness/presentation/Home/widgets/home_header.dart';
-import 'package:doingbusiness/presentation/notifications/widgets/empty_notifs.dart';
-import 'package:doingbusiness/utils/services/notification_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+/// Placeholder — the notifications list is wired through FCM/local plugins
+/// elsewhere. This screen stays as a simple entry point until we add the
+/// per-user notification history.
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
+  @override
   Widget build(BuildContext context) {
-    bool isEmpty = true;
     return Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            "Notifications",
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              height: 1.02,
-              fontSize: 22,
+      appBar: AppBar(
+        title: const Text(
+          'Notifications',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            height: 1.02,
+            fontSize: 22,
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: GestureDetector(
+              onTap: () => Get.to(const NotificationsScreen()),
+              child: const Icon(Icons.settings_outlined),
             ),
           ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: GestureDetector(
-                  onTap: () => Get.to(
-                        const NotificationsScreen(),
-                      ),
-                  child: Icon(Icons.settings_outlined)),
-            )
-          ],
-        ),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ListTile(
-              onTap: () {
-                LocalNotification.showBasicNotification();
-              },
-              leading: const Icon(Icons.notifications),
-              title: const Text('basic notification'),
-              trailing: IconButton(onPressed: () {}, icon: Icon(Icons.cancel)),
-            )
-          ],
-        ));
+        ],
+      ),
+      body: const Center(
+        child: Text('No notifications yet.'),
+      ),
+    );
   }
 }

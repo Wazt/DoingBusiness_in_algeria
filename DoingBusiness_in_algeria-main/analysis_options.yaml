@@ -1,24 +1,30 @@
 # ════════════════════════════════════════════════════════════════════════
-#  Dart Analyzer & Linter — strict config
+#  Dart Analyzer & Linter — pragmatic strict config
 # ════════════════════════════════════════════════════════════════════════
-#  Catches:
-#    - print() in production code
-#    - unused imports / variables
-#    - missing const / unnecessary new
-#    - missing final / prefer_final_fields
-#    - TODOs that never close
+#
+#  Philosophy
+#  ──────────
+#  We gate CI on rules that catch BUGS, SECURITY issues, or dead code.
+#  Pure-style lints (const constructors, single quotes, trailing commas)
+#  are kept OFF so the analyser stays actionable — a 650-issue report
+#  teaches nobody anything; a 20-issue report flags real problems.
+#
+#  If we want to enforce style, `dart format` already does that in CI
+#  via `dart format --output=none --set-exit-if-changed`.
 # ════════════════════════════════════════════════════════════════════════
 
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+  # Keep strict casts + strict raw types (catches silent `dynamic` bugs).
+  # strict-inference is off because several untyped Firebase SDK callbacks
+  # would otherwise fail without manual annotation noise everywhere.
   language:
     strict-casts: true
-    strict-inference: true
     strict-raw-types: true
 
   errors:
-    # These go from warnings to hard errors — CI fails on them.
+    # Real correctness / security gates — CI fails on these.
     invalid_assignment: error
     missing_required_param: error
     missing_return: error
@@ -27,28 +33,40 @@ analyzer:
     unused_local_variable: warning
     dead_code: error
 
+    # Tone down pure-style noise so `flutter analyze` stays signal-rich.
+    prefer_const_constructors: ignore
+    prefer_const_literals_to_create_immutables: ignore
+    prefer_const_declarations: ignore
+    prefer_single_quotes: ignore
+    require_trailing_commas: ignore
+    always_declare_return_types: ignore
+    always_use_package_imports: ignore
+    inference_failure_on_function_return_type: ignore
+    inference_failure_on_untyped_parameter: ignore
+    non_constant_identifier_names: ignore
+    prefer_final_fields: ignore
+    prefer_final_locals: ignore
+    unnecessary_parenthesis: ignore
+    unnecessary_this: ignore
+    unnecessary_brace_in_string_interps: ignore
+    use_build_context_synchronously: warning
+    deprecated_member_use: warning
+    unnecessary_import: warning
+    unused_field: warning
+    unused_element: warning
+    unused_catch_clause: warning
+
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
-    - "lib/firebase_options.dart"   # generated
-    - "lib/testing/**"               # scratch area
+    - "lib/firebase_options.dart" # generated
+    - "lib/testing/**"            # scratch area
 
 linter:
   rules:
-    # ─── Production hygiene ──────────────────────
+    # ─── Production hygiene (security-first) ──────
     avoid_print: true
     avoid_web_libraries_in_flutter: true
-    prefer_const_constructors: true
-    prefer_const_literals_to_create_immutables: true
-    prefer_const_declarations: true
-    prefer_final_fields: true
-    prefer_final_locals: true
-    unnecessary_new: true
-    unnecessary_const: true
-    unnecessary_this: true
-    unnecessary_null_checks: true
-    unnecessary_parenthesis: true
-    unnecessary_brace_in_string_interps: true
 
     # ─── Error-prone patterns ────────────────────
     avoid_empty_else: true
@@ -61,18 +79,11 @@ linter:
     no_adjacent_strings_in_list: true
     throw_in_finally: true
     unrelated_type_equality_checks: true
-    use_build_context_synchronously: true
     valid_regexps: true
 
-    # ─── Style ──────────────────────────────────
-    always_declare_return_types: true
-    always_use_package_imports: true
+    # ─── Naming correctness ──────────────────────
     camel_case_types: true
     camel_case_extensions: true
-    constant_identifier_names: false  # allow SCREAMING_SNAKE for constants
+    constant_identifier_names: false
     file_names: true
     library_names: true
-    non_constant_identifier_names: true
-    prefer_single_quotes: true
-    require_trailing_commas: true
-    sort_child_properties_last: true

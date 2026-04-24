@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -56,6 +55,10 @@ class ErrorMapper {
 
     // ─── Cloud Functions (callables) ──────────────────────────────────
     if (error is FirebaseFunctionsException) {
+      // Treat empty/whitespace-only message as "no message" — falls back to canned copy.
+      final rawMsg = error.message;
+      final serverMsg =
+          (rawMsg == null || rawMsg.trim().isEmpty) ? null : rawMsg;
       switch (error.code) {
         case 'unauthenticated':
           return 'You must be signed in to do this.';
@@ -64,13 +67,13 @@ class ErrorMapper {
         case 'invalid-argument':
           // Safe to surface the server-provided message here — our Cloud
           // Functions throw HttpsError with controlled messages.
-          return error.message ?? 'The request was rejected by the server.';
+          return serverMsg ?? 'The request was rejected by the server.';
         case 'not-found':
           return 'That resource does not exist.';
         case 'already-exists':
-          return error.message ?? 'This already exists.';
+          return serverMsg ?? 'This already exists.';
         case 'resource-exhausted':
-          return error.message ?? 'Rate limit reached. Please wait a moment.';
+          return serverMsg ?? 'Rate limit reached. Please wait a moment.';
         case 'deadline-exceeded':
         case 'unavailable':
           return 'The server is temporarily unavailable. Please try again.';

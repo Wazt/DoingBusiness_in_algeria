@@ -1,36 +1,23 @@
-import 'package:flutter/foundation.dart';
-import 'package:doingbusiness/data/repository/user_repository.dart';
-import 'package:doingbusiness/presentation/MainWrapper/main_wrapper.dart';
-import 'package:doingbusiness/presentation/auth/pages/login_screen.dart';
-import 'package:doingbusiness/presentation/auth/pages/email_verification.dart';
-import 'package:doingbusiness/presentation/intro/pages/intro_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:doingbusiness/core/routing/routing_service.dart';
+import 'package:doingbusiness/data/repository/user_repository.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
-/// ════════════════════════════════════════════════════════════════════════
-///  AuthenticationRepository — refactored
-/// ════════════════════════════════════════════════════════════════════════
-///  Key bugs fixed:
-///    ✔ screenRedirect null-safety — no more crash on first launch when
-///      `isShown` is null in GetStorage.
-///    ✔ deleteUserAccount actually deletes Firestore user doc, not just auth.
-///    ✔ reauthenticateWithCredential is CALLED (with parentheses, with args).
-///    ✔ Clear error codes thrown (typed) so UI layer can show meaningful text
-///      without leaking stack traces.
-///    ✔ No more `debugPrint(e)` on errors — they propagate to caller.
+/// Firebase Auth + account lifecycle.
 ///
-///  Architectural notes:
-///    - This repo still does navigation (screenRedirect + logout). That's a
-///      violation of separation-of-concerns; move to a RoutingService when you
-///      have bandwidth. For now, preserving behavior to minimize blast radius.
-/// ════════════════════════════════════════════════════════════════════════
+/// Navigation has been extracted into a [RoutingService] (resolved via
+/// [Get.find]) so this repo can be unit-tested against a fake routing
+/// service. In production the default GetX implementation is wired up in
+/// [GeneralBindings].
 class AuthenticationRepository extends GetxController {
   static AuthenticationRepository get instance => Get.find();
 
   final deviceStorage = GetStorage();
   final _auth = FirebaseAuth.instance;
+
+  RoutingService get _router => Get.find<RoutingService>();
 
   /// Currently signed-in user, or null if not signed in.
   User? get authUser => _auth.currentUser;
@@ -42,34 +29,36 @@ class AuthenticationRepository extends GetxController {
   }
 
   /// Decides which screen to show on startup.
-  /// FIXED: was crashing when `isShown == null` because both branches ran.
+  /// Null-safe: no more crash when `isShown` hasn't been written yet.
   Future<void> screenRedirect() async {
     final user = _auth.currentUser;
 
     if (user != null) {
-      // Logged in — check email verification
       if (user.emailVerified) {
-        Get.offAll(() => MainWrapper());
+        _router.goToMain();
       } else {
-        Get.offAll(() => EmailVerificationScreen(email: user.email));
+        _router.goToEmailVerify(email: user.email);
       }
       return;
     }
 
-    // Not logged in — has the user seen the onboarding?
     final isShown = deviceStorage.read('isShown') ?? false;
     if (isShown == true) {
-      Get.offAll(() => const LoginScreen());
+      _router.goToLogin();
     } else {
-      Get.offAll(() => const GetStartedPage());
+      _router.goToIntro();
     }
   }
 
   // ─── Email / password flows ──────────────────────────────────────────
 
-  Future<UserCredential> loginWithEmailAndPassword(String email, String password) async {
+  Future<UserCredential> loginWithEmailAndPassword(
+      String email, String password) async {
     try {
-      return await _auth.signInWithEmailAndPassword(email: email.trim(), password: password);
+      return await _auth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
     } on FirebaseAuthException catch (e) {
       throw _authExceptionToMessage(e);
     } catch (_) {
@@ -77,9 +66,13 @@ class AuthenticationRepository extends GetxController {
     }
   }
 
-  Future<UserCredential> registerWithEmailAndPassword(String email, String password) async {
+  Future<UserCredential> registerWithEmailAndPassword(
+      String email, String password) async {
     try {
-      return await _auth.createUserWithEmailAndPassword(email: email.trim(), password: password);
+      return await _auth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
     } on FirebaseAuthException catch (e) {
       throw _authExceptionToMessage(e);
     } catch (_) {
@@ -103,11 +96,10 @@ class AuthenticationRepository extends GetxController {
     }
   }
 
-  // ─── Reauth + account deletion (GDPR-compliant) ──────────────────────
+  // ─── Reauth + account deletion (GDPR) ────────────────────────────────
 
-  /// Reauthenticates current user with email/password. Required before
-  /// sensitive operations (delete, email change, password change).
-  Future<void> reauthenticateWithEmailAndPassword(String email, String password) async {
+  Future<void> reauthenticateWithEmailAndPassword(
+      String email, String password) async {
     final user = _auth.currentUser;
     if (user == null) throw 'You must be signed in.';
     try {
@@ -115,14 +107,12 @@ class AuthenticationRepository extends GetxController {
         email: email.trim(),
         password: password,
       );
-      await user.reauthenticateWithCredential(credential);  // ← was missing ()
+      await user.reauthenticateWithCredential(credential);
     } on FirebaseAuthException catch (e) {
       throw _authExceptionToMessage(e);
     }
   }
 
-  /// Changes the password of the currently logged-in user.
-  /// Requires a recent sign-in (< 5 min) or a fresh reauth.
   Future<void> updatePassword(String newPassword) async {
     final user = _auth.currentUser;
     if (user == null) throw 'You must be signed in.';
@@ -135,37 +125,31 @@ class AuthenticationRepository extends GetxController {
 
   /// Fully deletes the account:
   ///   1. Reauth (required by Firebase for security)
-  ///   2. Delete all Firestore data owned by the user
-  ///   3. Delete the Firebase Auth account
+  ///   2. Delete Firestore user document
+  ///   3. Delete Firebase Auth account
   ///   4. Clear local storage + route to onboarding
-  ///
-  /// This is GDPR Article 17 ("right to erasure") compliant and matches
-  /// Google Play's July-2023 account-deletion policy.
+  /// GDPR Article 17 compliant; matches Google Play's account-deletion policy.
   Future<void> deleteUserAccount(String email, String password) async {
     final user = _auth.currentUser;
     if (user == null) throw 'You must be signed in.';
 
     try {
-      // 1. Reauth
       await reauthenticateWithEmailAndPassword(email, password);
 
-      // 2. Wipe Firestore user document + any subcollections
       await UserRepository.instance.deleteUserRecord(user.uid);
 
-      // 3. Remove FCM tokens so backend stops pushing to this user
-      // (optional — tokens auto-invalidate but this is faster)
+      // Remove FCM tokens so backend stops pushing to this user
+      // (defence in depth — tokens auto-invalidate too).
       await FirebaseFirestore.instance
           .collection('Users')
           .doc(user.uid)
           .set({'fcmTokens': FieldValue.delete()}, SetOptions(merge: true))
           .catchError((_) {});
 
-      // 4. Delete Auth account
       await user.delete();
 
-      // 5. Clear local data + logout flow
       await deviceStorage.erase();
-      Get.offAll(() => const GetStartedPage());
+      _router.goToIntro();
     } on FirebaseAuthException catch (e) {
       throw _authExceptionToMessage(e);
     }
@@ -173,7 +157,7 @@ class AuthenticationRepository extends GetxController {
 
   Future<void> logout() async {
     await _auth.signOut();
-    Get.offAll(() => const LoginScreen());
+    _router.goToLogin();
   }
 
   // ─── Error mapping — never expose raw FirebaseException to UI ────────

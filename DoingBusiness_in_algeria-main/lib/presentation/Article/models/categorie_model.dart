@@ -24,9 +24,9 @@ class CategorieModel {
     if (document.data() != null) {
       final data = document.data()!;
       return CategorieModel(
-          id: data['id'],
-          name: data['name'] ?? "",
-          isFeatured: data['isFeatured'] ?? "");
+          id: (data['id'] as num?)?.toInt() ?? 0,
+          name: (data['name'] as String?) ?? '',
+          isFeatured: (data['isFeatured'] as bool?) ?? false);
     } else {
       return CategorieModel.empty();
     }
