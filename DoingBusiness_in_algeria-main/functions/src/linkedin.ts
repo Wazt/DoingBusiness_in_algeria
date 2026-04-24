@@ -299,28 +299,15 @@ export const createLinkedInArticle = onCall<CreateRequest, Promise<{ articleId: 
 );
 
 // ───────────────────────────────────────────────────────────────────────
-//  Optional: scheduled refresh (every 6h) — to re-fetch thumbnails that
-//  may expire. Leave commented until you observe broken images in the app.
+//  Note on thumbnail refresh
 // ───────────────────────────────────────────────────────────────────────
-
-// import { onSchedule } from 'firebase-functions/v2/scheduler';
+// Before Phase 8, mirrored articles stored the raw LinkedIn CDN URL in
+// their `image` field, which would expire after a few hours/days. Images
+// are now copied into Firebase Storage (permanent signed-by-project URLs)
+// by scripts/migrate-linkedin-images.mjs at import time, so a scheduled
+// refresh function is no longer needed.
 //
-// export const refreshLinkedInThumbnails = onSchedule(
-//   { schedule: 'every 6 hours', timeZone: 'Africa/Algiers' },
-//   async () => {
-//     const snapshot = await db
-//       .collection('Articles')
-//       .where('source', '==', 'linkedin')
-//       .limit(100)
-//       .get();
-//     for (const doc of snapshot.docs) {
-//       const url = doc.data().linkedinUrl as string;
-//       try {
-//         const preview = await fetchLinkedInPreview(url);
-//         await doc.ref.update({ image: preview.imageUrl ?? doc.data().image });
-//       } catch (_) {
-//         // swallow
-//       }
-//     }
-//   }
-// );
+// If LinkedIn later updates the source image on a post and you want the
+// mirror to pick up the change, re-run migrate-linkedin-images.mjs
+// locally. That avoids paying for a 6-hourly Cloud Function that would
+// do nothing 99% of the time.

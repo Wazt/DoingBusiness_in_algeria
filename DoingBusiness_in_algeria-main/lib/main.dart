@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:doingbusiness/bindings/general_bindings.dart';
 import 'package:doingbusiness/core/configs/theme/app_theme.dart';
+import 'package:doingbusiness/core/routing/routing_service.dart';
 import 'package:doingbusiness/firebase_options.dart';
 import 'package:doingbusiness/presentation/Profile/controller/profile_controller.dart';
 import 'package:doingbusiness/presentation/auth/controllers/authentication_repository.dart';
@@ -42,6 +43,11 @@ Future<void> main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+
+      // RoutingService must be registered before AuthenticationRepository
+      // because the latter's onReady() triggers screenRedirect() which
+      // resolves Get.find<RoutingService>().
+      Get.put<RoutingService>(GetxRoutingService(), permanent: true);
       Get.put(AuthenticationRepository());
 
       // ─── App Check ────────────────────────────────────────────────────

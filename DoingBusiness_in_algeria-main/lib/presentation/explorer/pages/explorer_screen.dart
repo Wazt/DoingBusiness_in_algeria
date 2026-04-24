@@ -3,7 +3,6 @@ import 'package:doingbusiness/core/configs/theme/app_colors.dart';
 import 'package:doingbusiness/presentation/Article/controllers/article_controller.dart';
 import 'package:doingbusiness/presentation/Article/pages/article_screen.dart';
 
-import 'package:doingbusiness/presentation/Home/widgets/home_item.dart';
 import 'package:doingbusiness/presentation/explorer/widgets/filter_bar.dart';
 
 import 'package:flutter/material.dart';

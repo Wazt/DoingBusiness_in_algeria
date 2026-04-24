@@ -17,7 +17,7 @@ class HomeCategories extends StatelessWidget {
         return CategoryShimmer();
       }
 
-      if (categoryController.featuredCategory.isEmpty) {
+      if (categoryController.featuredCategories.isEmpty) {
         return Center(
           child: Text('no data found'),
         );
@@ -26,10 +26,10 @@ class HomeCategories extends StatelessWidget {
         height: 40,
         child: ListView.builder(
             shrinkWrap: true,
-            itemCount: categoryController.featuredCategory.length,
+            itemCount: categoryController.featuredCategories.length,
             scrollDirection: Axis.horizontal,
             itemBuilder: (_, index) {
-              final category = categoryController.featuredCategory[index];
+              final category = categoryController.featuredCategories[index];
               return CategoryItem(
                 text: category.name,
                 selected: false,
